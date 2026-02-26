@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>FRUIT BOUNCE HARVEST</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <style>
+        :root {
+            --neon-pink: #ff71ce; --neon-blue: #01cdfe; --neon-green: #05ffa1;
+            --purple: #b967ff; --yellow: #fffb96; --bg-dark: #0a0a12;
+            --panel-bg: #161625; --neon-red: #ff3366;
+        }
+        body { 
+            background-color: var(--bg-dark); font-family: 'Hiragino Sans', 'Meiryo', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100dvh; margin: 0; overflow: hidden; touch-action: none; color: white;
+        }
+        body::before {
+            content: ""; position: fixed; bottom: 0; left: 0; width: 200%; height: 200%;
+            background-image: linear-gradient(rgba(1, 205, 254, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(1, 205, 254, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: -1;
+            transform: perspective(500px) rotateX(60deg) translateY(-20%);
+            animation: moveGrid 20s linear infinite;
+        }
+        @keyframes moveGrid {
+            from { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            to { transform: perspective(500px) rotateX(60deg) translateY(60px); }
+        }
+        #info-bar {
+            background: rgba(0,0,0,0.8); border: 2px solid var(--neon-blue);
+            width: 95%; max-width: 380px; border-radius: 4px;
+            margin-bottom: 8px; padding: 6px 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--neon-green); font-family: monospace; z-index: 10;
+        }
+        #scoreVal { font-size: 22px; font-weight: bold; color: #fff; }
+        .info-right { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+        #mute-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--neon-green); color: var(--neon-green);
+            cursor: pointer; padding: 2px 8px; border-radius: 4px; font-size: 16px; line-height: 1; user-select: none;
+        }
+        .main-layout { display: flex; align-items: stretch; gap: 8px; position: relative; }
+        .main-layout.reversed { flex-direction: row-reverse; }
+        .side-panel-left { display: flex; flex-direction: column; gap: 6px; justify-content: flex-start; }
+        #rev-btn { margin-top: auto; width: 100%; height: 40px; border-radius: 4px; background: #222; border: 2px solid var(--neon-green); color: var(--neon-green); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        .side-panel-right {
+            background: var(--panel-bg); border: 2px solid var(--neon-pink);
+            border-radius: 6px; padding: 5px; display: flex; flex-direction: column;
+            gap: 1px; box-shadow: 0 0 10px rgba(255, 113, 206, 0.2); min-width: 70px;
+        }
+        .guide-title { text-align: center; color: var(--neon-pink); font-size: 10px; margin-bottom: 4px; font-weight: bold; }
+        .score-item { display: flex; align-items: center; justify-content: space-between; font-weight: bold; font-size: 12px; }
+        .score-item span { color: var(--neon-green); font-family: monospace; font-size: 10px; }
+        canvas { 
+            background: rgba(0, 0, 0, 0.9); border: 3px solid var(--neon-blue); 
+            box-shadow: 0 0 15px rgba(1, 205, 254, 0.3); border-radius: 8px; 
+            cursor: crosshair; max-width: 58vw; height: auto; max-height: 70dvh;
+        }
+        .btn { background: #111; border: 2px solid; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; text-transform: uppercase; color: white; writing-mode: vertical-lr; text-align: center; height: 80px; padding: 6px; }
+        .btn-pink { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .btn-yellow { border-color: var(--yellow); color: var(--yellow); }
+        .btn-blue { border-color: var(--neon-blue); color: var(--neon-blue); }
+        #ranking-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        #ranking-content { background: var(--panel-bg); border: 3px solid var(--neon-blue); padding: 20px; border-radius: 12px; width: 260px; text-align: center; }
+        #ranking-list { list-style: none; padding: 0; text-align: left; color: var(--neon-green); font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="info-bar">
+        <div class="info-left">SCORE:<span id="scoreVal">00000</span></div>
+        <div class="info-right">
+            <span>NEXT:<span id="nextEmoji"></span></span>
+            <button id="mute-btn">🔊</button>
+        </div>
+    </div>
+    <div class="main-layout" id="layoutContainer">
+        <div class="side-panel-left">
+            <button class="btn btn-pink" onclick="showRanking()">RANKING</button>
+            <button class="btn btn-yellow" onclick="saveAndReset()">RESET</button>
+            <button class="btn btn-blue" onclick="confirmMenu()">MENU</button>
+            <div id="rev-btn" onclick="toggleReverse()">🔄</div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="side-panel-right">
+            <div class="guide-title">EVOLUTION</div>
+            <div class="score-item">🫐 <span>10</span></div>
+            <div class="score-item">🍒 <span>20</span></div>
+            <div class="score-item">🍓 <span>40</span></div>
+            <div class="score-item">🍇 <span>80</span></div>
+            <div class="score-item">🥑 <span>160</span></div>
+            <div class="score-item">🍊 <span>320</span></div>
+            <div class="score-item">🍎 <span>640</span></div>
+            <div class="score-item">🍐 <span>1280</span></div>
+            <div class="score-item">🍈 <span>2500</span></div>
+            <div class="score-item" style="color:var(--neon-pink);">🍑 <span>5000</span></div>
+        </div>
+    </div>
+    <div id="ranking-modal">
+        <div id="ranking-content">
+            <h2 style="color: var(--neon-blue); margin-top:0; font-size: 20px;">TOP 5</h2>
+            <ul id="ranking-list"></ul>
+            <button class="btn btn-blue" style="writing-mode:horizontal-tb; height:auto; width:100%; margin-top:15px; font-size:14px;" onclick="closeRanking()">CLOSE</button>
+        </div>
+    </div>
+    <script>
+        const AudioEngine = {
+            ctx: null, isMuted: localStorage.getItem('v_snd_muted') === 'true', bgmInterval: null,
+            init() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.startBGM(); } this.sync(); },
+            sync() { this.isMuted = localStorage.getItem('v_snd_muted') === 'true'; const btn = document.getElementById('mute-btn'); if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊'; if (this.ctx) { if (this.isMuted) this.ctx.suspend(); else this.ctx.resume(); } },
+            toggle() { this.init(); this.isMuted = !this.isMuted; localStorage.setItem('v_snd_muted', this.isMuted); this.sync(); this.playTone(600, 'sine', 0.1, 0.05); },
+            playTone(freq, type, dur, vol) { if (!this.ctx || this.isMuted) return; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime); gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + dur); },
+            startBGM() { if (this.bgmInterval) return; let step = 0; const melody = [110, 0, 146, 110, 164, 0, 110, 98]; this.bgmInterval = setInterval(() => { const freq = melody[step % melody.length]; if (freq > 0 && gameActive && this.ctx && !this.isMuted) this.playTone(freq, 'sine', 0.8, 0.01); step++; }, 600); }
+        };
+
+        const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const scoreEl = document.getElementById('scoreVal'); const nextEl = document.getElementById('nextEmoji'); const RANK_KEY = 'fruitRanking'; 
+        const W = 320; const H = 450; canvas.width = W; canvas.height = H;
+        const fruitTypes = [{emoji:'🫐',r:12,s:10},{emoji:'🍒',r:18,s:20},{emoji:'🍓',r:25,s:40},{emoji:'🍇',r:32,s:80},{emoji:'🥑',r:40,s:160},{emoji:'🍊',r:50,s:320},{emoji:'🍎',r:62,s:640},{emoji:'🍐',r:75,s:1280},{emoji:'🍈',r:90,s:2500},{emoji:'🍑',r:108,s:5000}];
+        let fruits = []; let currentX = W/2; let currentType = 0; let nextType = 0; let score = 0; let isDropping = false; let gameActive = true; let gameOverTimer = 0; const DEADLINE_Y = 85;
+
+        document.getElementById('mute-btn').addEventListener('click', (e) => { e.stopPropagation(); AudioEngine.toggle(); });
+        function toggleReverse() { AudioEngine.init(); document.getElementById('layoutContainer').classList.toggle('reversed'); AudioEngine.playTone(600, 'sine', 0.1, 0.05); }
+        function confirmMenu() { AudioEngine.init(); if (confirm("ゲームを終了してメインページに戻りますか？")) location.href = '../index.html'; }
+        function init() { fruits = []; score = 0; scoreEl.innerText = "00000"; currentType = Math.floor(Math.random()*5); nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; gameActive = true; gameOverTimer = 0; }
+        function spawn(x, y, type, isCombine = false) { fruits.push({ x, y, vx: 0, vy: isCombine ? -1.5 : 0, type, r: fruitTypes[type].r, angle: 0, va: 0, scale: isCombine ? 0.6 : 0.1, poyo: isCombine ? 1.6 : 1.2, spawnTime: Date.now(), glow: isCombine ? 1.0 : 0 }); }
+        function handleMove(e) { if (!gameActive || isDropping) return; AudioEngine.init(); const rect = canvas.getBoundingClientRect(); const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX; currentX = (clientX - rect.left) * (W / rect.width); const r = fruitTypes[currentType].r; currentX = Math.max(r, Math.min(W - r, currentX)); }
+        function handleRelease() { if (isDropping || !gameActive) return; AudioEngine.init(); isDropping = true; AudioEngine.playTone(400, 'sine', 0.1, 0.05); spawn(currentX, 40, currentType); setTimeout(() => { currentType = nextType; nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; isDropping = false; }, 700); }
+        canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mousedown', handleMove); canvas.addEventListener('mouseup', handleRelease);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); AudioEngine.init(); handleMove(e); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); });
+        canvas.addEventListener('touchend', (e) => { e.preventDefault(); handleRelease(); });
+
+        function update() {
+            if (!gameActive) return; const now = Date.now(); const subSteps = 8; const gravity = 0.6 / subSteps; let exceeded = false;
+            for (let s = 0; s < subSteps; s++) {
+                for (let i = 0; i < fruits.length; i++) {
+                    let f = fruits[i]; f.vy += gravity; f.x += f.vx / subSteps; f.y += f.vy / subSteps; f.angle += f.va / subSteps;
+                    f.va = Math.max(-0.05, Math.min(0.05, f.va)); f.vx *= Math.pow(0.98, 1/subSteps); f.va *= Math.pow(0.90, 1/subSteps);
+                    if (f.x < f.r) { f.x = f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.85; } if (f.x > W - f.r) { f.x = W - f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.85; }
+                    if (f.y > H - f.r) { f.y = H - f.r; f.vy *= -0.2; f.vx *= 0.9; f.va = f.vx * 0.05; if (Math.abs(f.vy) > 0.5) f.poyo = 0.8; }
+                    for (let j = i + 1; j < fruits.length; j++) {
+                        let f2 = fruits[j]; let dx = f2.x - f.x; let dy = f2.y - f.y; let distSq = dx * dx + dy * dy; let minDist = (f.r + f2.r);
+                        if (distSq < minDist * minDist) {
+                            let dist = Math.sqrt(distSq);
+                            if (f.type === f2.type && now - f.spawnTime > 500 && now - f2.spawnTime > 500) {
+                                const nt = f.type + 1; const nx = (f.x + f2.x) / 2, ny = (f.y + f2.y) / 2; fruits.splice(j, 1); fruits.splice(i, 1);
+                                if (nt < fruitTypes.length) { AudioEngine.playTone(300 + nt * 40, 'sine', 0.2, 0.1); spawn(nx, ny, nt, true); score += fruitTypes[nt].s; scoreEl.innerText = score.toString().padStart(5, '0'); } else { AudioEngine.playTone(800, 'square', 0.4, 0.1); score += 10000; scoreEl.innerText = score.toString().padStart(5, '0'); }
+                                return;
+                            }
+                            let angle = Math.atan2(dy, dx); let overlap = minDist - dist; let spring = 0.4;
+                            f.x -= Math.cos(angle) * overlap * spring; f.y -= Math.sin(angle) * overlap * spring; f2.x += Math.cos(angle) * overlap * spring; f2.y += Math.sin(angle) * overlap * spring;
+                            let force = overlap * 0.3; f.vx -= Math.cos(angle) * force; f.vy -= Math.sin(angle) * force; f2.vx += Math.cos(angle) * force; f2.vy += Math.sin(angle) * force;
+                            f.va *= 0.95; f2.va *= 0.95; if (overlap > 1.2) { f.poyo = 1.2; f2.poyo = 1.2; }
+                        }
+                    }
+                }
+            }
+            fruits.forEach(f => { f.poyo += (1 - f.poyo) * 0.15; f.scale += (1 - f.scale) * 0.15; f.glow *= 0.85; if (f.y - f.r < DEADLINE_Y && now - f.spawnTime > 1500) exceeded = true; });
+            if (exceeded) { gameOverTimer++; if (gameOverTimer > 180) { gameActive = false; alert("GAME OVER! SCORE: " + score); setTimeout(saveAndReset, 500); } } else gameOverTimer = 0;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H); ctx.save(); ctx.shadowBlur = 10; ctx.lineWidth = 3; ctx.setLineDash([10, 5]);
+            ctx.shadowColor = gameOverTimer > 0 ? "red" : "var(--neon-pink)"; ctx.strokeStyle = gameOverTimer > 0 ? `rgba(255, 0, 0, ${0.4 + Math.sin(Date.now() / 100) * 0.4})` : "rgba(255, 113, 206, 0.6)";
+            ctx.beginPath(); ctx.moveTo(0, DEADLINE_Y); ctx.lineTo(W, DEADLINE_Y); ctx.stroke(); ctx.restore();
+            if (gameOverTimer > 0) { ctx.fillStyle = "white"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center"; ctx.fillText(`${(3 - gameOverTimer / 60).toFixed(1)}s`, W / 2, DEADLINE_Y - 20); }
+            if (!isDropping && gameActive) { ctx.save(); ctx.font = `${fruitTypes[currentType].r * 1.5}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(fruitTypes[currentType].emoji, currentX, 40); ctx.restore(); }
+            fruits.forEach(f => { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.angle); if (f.glow > 0.05) { ctx.shadowBlur = 18 * f.glow; ctx.shadowColor = "white"; } ctx.scale(f.scale * f.poyo, f.scale * (2 - f.poyo)); ctx.font = `${f.r * 1.8}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(fruitTypes[f.type].emoji, 0, 0); ctx.restore(); });
+        }
+        function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+        function saveAndReset() { AudioEngine.init(); if (confirm("スコアを登録しますか？")) { const name = prompt("名前", "PLAYER"); if (name) { let r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]'); r.push({name, score}); r.sort((a,b)=>b.score-a.score); localStorage.setItem(RANK_KEY, JSON.stringify(r.slice(0,5))); init(); } } else { if (confirm("登録せずにリセットしますか？")) init(); } }
+        function showRanking() { AudioEngine.init(); const list = document.getElementById('ranking-list'); const r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]'); list.innerHTML = r.length ? r.map((d,i)=>`<li style="margin:10px 0;">${i+1}. ${d.name} <span style="float:right; color:var(--neon-blue);">${d.score}</span></li>`).join('') : '<li>No Data</li>'; document.getElementById('ranking-modal').style.display = 'flex'; }
+        function closeRanking() { AudioEngine.init(); document.getElementById('ranking-modal').style.display = 'none'; }
+        AudioEngine.sync(); window.addEventListener('storage', (e) => { if (e.key === 'v_snd_muted') AudioEngine.sync(); });
+        init(); gameLoop();
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", "color: #ff71ce; font-size: 20px; font-weight: bold;", "color: #01cdfe; font-size: 14px;");
+    </script>
+</body>
+</html>

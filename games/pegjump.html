@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PEG JUMP</title>
+    <style>
+        :root {
+            --v-pink: #ff71ce; --v-blue: #01cdfe; --v-purple: #b967ff;
+            --v-cyan: #05ffa1; --v-yellow: #fffb96; --bg-dark: #0a0a12;
+        }
+
+        body {
+            background-color: var(--bg-dark); color: white;
+            font-family: sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            overflow: hidden; touch-action: manipulation;
+        }
+
+        .bg-lines {
+            position: fixed; inset: 0; z-index: -1; opacity: 0.15;
+            background-image: linear-gradient(var(--v-blue) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: moveGrid 15s linear infinite;
+        }
+        @keyframes moveGrid {
+            from { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            to { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        .game-container {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 400px; padding: 10px; box-sizing: border-box;
+        }
+
+        .header { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 5px; }
+        h1 {
+            font-size: clamp(18px, 5vw, 26px); font-weight: 900; font-style: italic;
+            color: var(--v-pink); text-shadow: 0 0 15px var(--v-pink);
+            margin: 0; letter-spacing: 4px;
+        }
+        #sound-toggle { position: absolute; right: 10px; cursor: pointer; font-size: 20px; filter: drop-shadow(0 0 5px var(--v-cyan)); z-index: 101; }
+
+        .guide-text {
+            font-size: 10px; color: var(--v-cyan); font-weight: bold;
+            margin-bottom: 10px; text-shadow: 0 0 5px var(--v-cyan);
+            height: 12px; z-index: 10;
+        }
+
+        .board {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(2px, 1vw, 5px);
+            background: rgba(22, 22, 37, 0.9);
+            padding: 8px; border-radius: 12px;
+            border: 2px solid var(--v-blue);
+            box-shadow: 0 0 20px rgba(1, 205, 254, 0.3);
+            z-index: 10; margin-bottom: 15px;
+        }
+
+        .cell {
+            width: clamp(35px, 11.5vw, 45px); height: clamp(35px, 11.5vw, 45px);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+
+        .hole { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(1, 205, 254, 0.3); }
+
+        .peg {
+            width: 80%; height: 80%; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--v-cyan), #008866);
+            box-shadow: 0 0 10px var(--v-cyan);
+            cursor: pointer; transition: transform 0.2s;
+            z-index: 2;
+        }
+
+        .peg.selected {
+            background: radial-gradient(circle at 30% 30%, #ffffff, var(--v-pink), #aa0066);
+            box-shadow: 0 0 18px var(--v-pink);
+            transform: scale(1.1);
+        }
+
+        .invalid { visibility: hidden; }
+
+        .side-panel {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            width: 100%; z-index: 10;
+        }
+
+        .btn {
+            background: rgba(0, 0, 0, 0.7); border: 2px solid; padding: 10px 2px;
+            border-radius: 8px; cursor: pointer; text-align: center;
+            font-size: 10px; font-weight: bold; color: white; transition: 0.2s;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn-pink { border-color: var(--v-pink); color: var(--v-pink); }
+        .btn-yellow { border-color: var(--v-yellow); color: var(--v-yellow); }
+        .btn-blue { border-color: var(--v-blue); color: var(--v-blue); }
+
+        #ranking-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92); align-items: center; justify-content: center; z-index: 2000;
+        }
+        .modal-content {
+            background: var(--bg-dark); border: 2px solid var(--v-pink); padding: 20px;
+            width: 80%; max-width: 260px; border-radius: 20px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-lines"></div>
+    <div class="game-container">
+        <div class="header">
+            <h1>PEG JUMP</h1>
+            <div id="sound-toggle" onclick="Snd.toggle()">🔊</div>
+        </div>
+        <div id="guide" class="guide-text">最初に、穴をあける場所を選んでください</div>
+        <div id="board" class="board"></div>
+        <div class="side-panel">
+            <button class="btn btn-pink" onclick="showRanking()">RANKING</button>
+            <button class="btn btn-yellow" onclick="saveAndReset()">RESET</button>
+            <button class="btn btn-blue" onclick="backToMenu()">MENU</button>
+        </div>
+    </div>
+
+    <div id="ranking-modal">
+        <div class="modal-content">
+            <h2 style="color:var(--v-pink); margin:0 0 15px 0; font-size:18px;">TOP 5</h2>
+            <ul id="ranking-list" style="list-style:none; padding:0; margin-bottom:20px; text-align:left; color:var(--v-cyan);"></ul>
+            <button class="btn btn-blue" style="width:100%" onclick="closeRanking()">CLOSE</button>
+        </div>
+    </div>
+
+<script>
+const layout = [[-1,-1,1,1,1,-1,-1],[-1,-1,1,1,1,-1,-1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[-1,-1,1,1,1,-1,-1],[-1,-1,1,1,1,-1,-1]];
+const RANK_KEY = 'jumping_pegs_rank';
+let state = [], selected = null, score = 0, firstHoleMade = false;
+
+const Snd = {
+    ctx: null,
+    muted: localStorage.getItem('v_snd_muted') === 'true',
+    bgmId: null,
+    step: 0,
+    init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+    },
+
+    toggle() {
+        this.muted = !this.muted;
+        localStorage.setItem('v_snd_muted', this.muted);
+        this.sync();
+    },
+    sync() {
+        this.muted = localStorage.getItem('v_snd_muted') === 'true';
+        document.getElementById('sound-toggle').innerText = this.muted ? '🔇' : '🔊';
+        if (this.ctx) {
+            this.muted ? this.ctx.suspend() : this.ctx.resume();
+        }
+    },
+    play(f, t, d, v = 0.03) {
+        if (this.muted) return;
+        this.init();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = t; o.frequency.value = f;
+        g.gain.setValueAtTime(v, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + d);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + d);
+    },
+    startBGM() {
+        if (this.bgmId) return;
+        this.bgmId = setInterval(() => {
+            if (this.muted) return;
+            const notes = [110, 146, 98, 130];
+            this.play(notes[this.step % 4], 'triangle', 2.0, 0.015);
+            this.step++;
+        }, 1200);
+    }
+};
+
+function backToMenu() {
+    if(confirm("ゲームを終了してメインページに戻りますか？")) {
+        if (window.history.length > 1) window.history.back(); else location.href = '../index.html';
+    }
+}
+
+function init() {
+    state = layout.map(r => [...r]);
+    selected = null; firstHoleMade = false; score = 33;
+    document.getElementById('guide').innerText = "最初に、穴をあける場所を選んでください";
+    document.getElementById('sound-toggle').innerText = Snd.muted ? '🔇' : '🔊';
+    render();
+}
+
+function render() {
+    const b = document.getElementById('board');
+    b.innerHTML = '';
+    let count = 0;
+    for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            if (state[r][c] === -1) { cell.className += ' invalid'; }
+            else {
+                cell.className += ' hole';
+                if (state[r][c] === 1) {
+                    count++;
+                    const p = document.createElement('div');
+                    p.className = 'peg';
+                    if (selected && selected.r === r && selected.c === c) p.className += ' selected';
+                    p.onclick = (e) => { e.stopPropagation(); Snd.startBGM(); handleClick(r, c); };
+                    cell.appendChild(p);
+                } else { cell.onclick = () => handleClick(r, c); }
+            }
+            b.appendChild(cell);
+        }
+    }
+    score = count;
+    if (firstHoleMade && isGameOver()) {
+        setTimeout(() => { 
+            Snd.play(100, 'sawtooth', 0.5, 0.05);
+            alert("手詰まりです！残りペグ数: " + score); 
+            saveAndReset(); 
+        }, 300);
+    }
+}
+
+function handleClick(r, c) {
+    Snd.init();
+    if (!firstHoleMade) {
+        state[r][c] = 0; firstHoleMade = true;
+        document.getElementById('guide').innerText = "ペグを飛び越えて消しましょう";
+        Snd.play(220, 'sine', 0.2);
+    } else {
+        if (state[r][c] === 1) {
+            selected = (selected && selected.r === r && selected.c === c) ? null : {r, c};
+            Snd.play(440, 'sine', 0.1);
+        } else if (state[r][c] === 0 && selected) {
+            const dr = r - selected.r, dc = c - selected.c;
+            if ((Math.abs(dr) === 2 && dc === 0) || (Math.abs(dc) === 2 && dr === 0)) {
+                const mr = selected.r + dr / 2, mc = selected.c + dc / 2;
+                if (state[mr][mc] === 1) {
+                    state[selected.r][selected.c] = 0; state[mr][mc] = 0; state[r][c] = 1;
+                    selected = null; Snd.play(660, 'triangle', 0.2, 0.05);
+                    render();
+                    return;
+                }
+            }
+        }
+    }
+    render();
+}
+
+function isGameOver() {
+    for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+            if (state[r][c] !== 1) continue;
+            const dirs = [[0,2],[0,-2],[2,0],[-2,0]];
+            for (let [dr, dc] of dirs) {
+                const nr = r+dr, nc = c+dc, mr = r+dr/2, mc = c+dc/2;
+                if (nr>=0 && nr<7 && nc>=0 && nc<7) {
+                    if (state[nr][nc] === 0 && state[mr][mc] === 1) return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function saveAndReset() {
+    if (confirm("スコアを登録しますか？")) {
+        const name = prompt("名前", "PLAYER");
+        if (name === null) { init(); return; }
+        if (name.trim() !== "") {
+            let r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+            r.push({name, score});
+            r.sort((a,b) => a.score - b.score);
+            localStorage.setItem(RANK_KEY, JSON.stringify(r.slice(0,5)));
+            init();
+        }
+    } else {
+        if (confirm("登録せずにリセットしますか？")) init();
+    }
+}
+
+function showRanking() {
+    const list = document.getElementById('ranking-list');
+    const r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+    list.innerHTML = r.length ? r.map((d,i)=>`<li style="margin:10px 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size:12px;">#${i+1} ${d.name} <span style="float:right; color:var(--v-blue);">${d.score}</span></li>`).join('') : '<li>NO DATA</li>';
+    document.getElementById('ranking-modal').style.display = 'flex';
+}
+function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') Snd.sync();
+});
+
+window.addEventListener('pageshow', () => {
+    Snd.sync();
+});
+
+init();
+
+console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+            "color: #01cdfe; font-size: 14px;");</script>
+</body>
+</html>

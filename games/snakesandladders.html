@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SNAKES & LADDERS</title>
+    <style>
+        :root {
+            --v-pink: #ff71ce; --v-blue: #01cdfe; --v-cyan: #05ffa1; 
+            --v-yellow: #fffb96; --v-purple: #b967ff; --v-orange: #ff9a00; --bg-dark: #0a0a1a;
+        }
+        body {
+            background-color: var(--bg-dark); color: #ccc; font-family: sans-serif;
+            display: flex; flex-direction: column; align-items: center; 
+            /* 修正：上寄せから中央寄せに変更 */
+            justify-content: center; 
+            margin: 0; padding: 0; 
+            /* 修正：スマホの高さ制限をより柔軟に */
+            min-height: 100dvh; width: 100vw; overflow: hidden; touch-action: manipulation;
+        }
+        .bg-lines {
+            position: fixed; inset: 0; z-index: -1; opacity: 0.2;
+            background-image: linear-gradient(var(--v-blue) 1px, transparent 1px), linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 40px 40px; transform: perspective(500px) rotateX(60deg);
+            animation: move-bg 10s linear infinite;
+        }
+        @keyframes move-bg { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
+        
+        .header-container { 
+            display: flex; align-items: center; justify-content: center; 
+            /* 修正：上下の余白を調整 */
+            padding: 10px 0; width: 100%; gap: 15px; 
+        }
+        h1 { font-size: clamp(18px, 4.5vw, 24px); color: var(--v-pink); text-shadow: 0 0 10px var(--v-pink); margin: 0; font-style: italic; letter-spacing: 2px; }
+        #sound-toggle, #sound-toggle-overlay { cursor: pointer; font-size: 20px; filter: drop-shadow(0 0 5px var(--v-cyan)); line-height: 1; }
+
+        .rule-guide { font-size: 10px; margin-bottom: 8px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .rule-snake { color: var(--v-pink); }
+        .rule-ladder { color: var(--v-cyan); }
+        
+        .game-container { position: relative; width: min(85vw, 52vh); height: min(85vw, 52vh); border: 2px solid var(--v-blue); box-shadow: 0 0 15px rgba(1, 205, 254, 0.3); }
+        #board { display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); width: 100%; height: 100%; background: rgba(40, 40, 70, 0.95); }
+        .cell { border: 0.5px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 9px; color: rgba(255, 255, 255, 0.75); font-weight: 900; position: relative; text-shadow: 1px 1px 2px #000; }
+        .cell.active-turn { background: rgba(255, 255, 255, 0.25); box-shadow: inset 0 0 10px rgba(255,255,255,0.5); }
+        
+        #line-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        .piece { width: 12px; height: 12px; border-radius: 50%; position: absolute; transition: all 0.4s ease; z-index: 10; border: 1.5px solid white; box-shadow: 0 0 8px currentColor; }
+        
+        #overlay { position: fixed; inset: 0; background: rgba(10,10,26,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .player-setup { display: flex; flex-direction: column; gap: 8px; margin: 15px 0; width: 100%; max-width: 320px; }
+        .player-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 8px; justify-content: space-between; }
+        
+        .btn { background: rgba(255,255,255,0.08); border: 1px solid #444; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 11px; flex: 1; transition: 0.2s; outline: none; }
+        .btn.active { background: var(--v-blue); border-color: #fff; box-shadow: 0 0 8px var(--v-blue); color: #000; font-weight: bold; }
+        .btn-cpu.active { background: var(--v-purple); box-shadow: 0 0 8px var(--v-purple); color: #fff; }
+        .start-btn { background: linear-gradient(45deg, var(--v-pink), var(--v-purple)); color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px var(--v-pink); }
+        
+        #dice-view { font-size: 28px; font-weight: bold; color: var(--v-yellow); margin: 5px; height: 32px; text-shadow: 0 0 10px var(--v-yellow); }
+        /* 修正：コントロールパネルが最下部に張り付かないよう調整 */
+        .control-panel { display: flex; gap: 6px; width: min(95vw, 420px); margin-top: 10px; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box; }
+        
+        #ranking-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; }
+        .modal-content { background:#111; border:1px solid var(--v-pink); padding:20px; width:280px; border-radius:15px; }
+    </style>
+</head>
+<body>
+    <div class="bg-lines"></div>
+    <div id="overlay">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
+            <h1>SNAKES & LADDERS</h1>
+            <div id="sound-toggle-overlay" onclick="AudioEngine.toggleMute()">🔊</div>
+        </div>
+        <div style="font-size:13px; color:var(--v-blue); margin-bottom:10px;">参加プレイヤーを選択</div>
+        <div class="player-setup" id="setup-list"></div>
+        <button class="start-btn" onclick="startGame()">ゲーム開始！</button>
+    </div>
+
+    <div class="header-container">
+        <h1>SNAKES & LADDERS</h1>
+        <div id="sound-toggle" onclick="AudioEngine.toggleMute()">🔊</div>
+    </div>
+
+    <div class="rule-guide">
+        <span class="rule-snake">●ヘビ：戻る</span>　
+        <span class="rule-ladder">●ハシゴ：進む</span>
+    </div>
+
+    <div class="game-container">
+        <canvas id="line-canvas"></canvas>
+        <div id="board"></div>
+    </div>
+
+    <div id="dice-view">-</div>
+    <div id="status" style="font-size:13px; height:18px; margin-bottom:5px; font-weight:bold;"></div>
+    
+    <div class="control-panel">
+        <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="showRanking()">RANKING</button>
+        <button id="roll-btn" class="btn" style="flex: 2; border-color:var(--v-yellow); color:var(--v-yellow); font-size:14px;" onclick="handleRoll()">サイコロを振る</button>
+        <button id="title-btn" class="btn" style="border-color:var(--v-purple); color:var(--v-purple); display:none;" onclick="backToTitle()">TITLE</button>
+        <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="backToMenu()">MENU</button>
+    </div>
+
+    <div id="ranking-modal">
+        <div class="modal-content">
+            <h2 style="color:var(--v-pink); text-align:center; margin-top:0; font-size:18px;">ベストスコア</h2>
+            <div id="ranking-list" style="font-size:12px; line-height:1.6;"></div>
+            <button class="btn" style="width:100%; margin-top:15px; background:var(--v-blue); color:#000;" onclick="closeRanking()">閉じる</button>
+        </div>
+    </div>
+
+<script>
+
+const RANK_KEY = 'neon_snakes_v5_final';
+const SOUND_KEY = 'v_snd_muted';
+const pColors = ['#fffb96', '#b967ff', '#01cdfe', '#ff9a00'];
+let snakes = {}, ladders = {}, playerPos = [], turnCount = [], isCPUs = [], turn = 0, isMoving = false, activeIndices = [];
+
+const AudioEngine = {
+    ctx: null, 
+    isMuted: localStorage.getItem(SOUND_KEY) === 'true', 
+    isBGMPlaying: false,
+    init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended' && !this.isMuted) this.ctx.resume();
+        if (this.isMuted && this.ctx.state !== 'suspended') this.ctx.suspend();
+        this.updateButton();
+    },
+    updateButton() {
+        const icon = this.isMuted ? '🔇' : '🔊';
+        const btn = document.getElementById('sound-toggle');
+        const btnOverlay = document.getElementById('sound-toggle-overlay');
+        if (btn) btn.innerText = icon;
+        if (btnOverlay) btnOverlay.innerText = icon;
+    },
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem(SOUND_KEY, this.isMuted);
+        this.updateButton();
+        if (this.ctx) {
+            this.isMuted ? this.ctx.suspend() : this.ctx.resume();
+        }
+    },
+    playTone(freq, type, dur, vol, slide = 0) {
+        if (this.isMuted) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slide !== 0) osc.frequency.exponentialRampToValueAtTime(freq + slide, this.ctx.currentTime + dur);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + dur);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + dur);
+    },
+    startBGM() {
+        if (this.isBGMPlaying) return;
+        this.init();
+        this.isBGMPlaying = true;
+        let step = 0;
+        const melody = [110, 0, 146, 0, 110, 164, 110, 98];
+        setInterval(() => {
+            if (!this.ctx || this.isMuted) return;
+            const freq = melody[step % melody.length];
+            if (freq > 0) this.playTone(freq, 'sine', 0.8, 0.02);
+            step++;
+        }, 600);
+    }
+};
+
+function initSetup() {
+    const list = document.getElementById('setup-list');
+    list.innerHTML = '';
+    for(let i=0; i<4; i++) {
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        row.innerHTML = `
+            <span style="color:${pColors[i]}; font-weight:bold; font-size:14px;">P${i+1}</span>
+            <button id="p${i}-h" class="btn ${i===0?'active':''}" onclick="setPlayerType(${i}, 'human')">人間</button>
+            <button id="p${i}-c" class="btn btn-cpu ${i===1?'active':''}" onclick="setPlayerType(${i}, 'cpu')">CPU</button>
+            <button id="p${i}-off" class="btn ${i>1?'active':''}" onclick="setPlayerType(${i}, 'off')">不参加</button>
+        `;
+        list.appendChild(row);
+    }
+    AudioEngine.updateButton();
+}
+
+let playerSettings = ['human', 'cpu', 'off', 'off'];
+function setPlayerType(idx, type) {
+    AudioEngine.playTone(440, 'sine', 0.05, 0.05);
+    playerSettings[idx] = type;
+    document.getElementById(`p${idx}-h`).className = 'btn ' + (type==='human'?'active':'');
+    document.getElementById(`p${idx}-c`).className = 'btn btn-cpu ' + (type==='cpu'?'active':'');
+    document.getElementById(`p${idx}-off`).className = 'btn ' + (type==='off'?'active':'');
+}
+
+function backToMenu() {
+    if(confirm("ゲームを終了してメインページに戻りますか？")) {
+        if (window.history.length > 1) window.history.back(); else location.href = '../index.html';
+    }
+}
+
+function backToTitle() {
+    if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) {
+        location.reload();
+    }
+}
+
+function startGame() {
+    AudioEngine.init();
+    AudioEngine.startBGM();
+    activeIndices = playerSettings.map((s, i) => s !== 'off' ? i : -1).filter(i => i !== -1);
+    if(activeIndices.length < 2) { alert("2人以上選んでください"); return; }
+    playerPos = activeIndices.map(() => 1);
+    turnCount = activeIndices.map(() => 0);
+    isCPUs = activeIndices.map(i => playerSettings[i] === 'cpu');
+    generateMap();
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('title-btn').style.display = 'block';
+    
+    const board = document.getElementById('board'); board.innerHTML = '';
+    for (let r = 9; r >= 0; r--) {
+        for (let c = 0; c < 10; c++) {
+            let id = (r % 2 === 0) ? (r * 10 + c + 1) : (r * 10 + (9 - c) + 1);
+            board.innerHTML += `<div class="cell" id="cell-${id}">${id}</div>`;
+        }
+    }
+    document.querySelectorAll('.piece').forEach(p => p.remove());
+    activeIndices.forEach((pIdx, i) => {
+        const p = document.createElement('div'); p.className = 'piece'; p.id = 'p' + i;
+        p.style.color = pColors[pIdx]; p.style.backgroundColor = pColors[pIdx];
+        document.querySelector('.game-container').appendChild(p);
+    });
+    turn = 0; isMoving = false;
+    setTimeout(() => { 
+        drawLines(); updateUI(); updateStatus();
+        if (isCPUs[turn]) setTimeout(handleRoll, 1000);
+    }, 150);
+}
+
+function generateMap() {
+    snakes = {}; ladders = {}; const used = new Set([1, 100]);
+    const make = (count, isSnake) => {
+        for(let i=0; i<count; i++) {
+            let a = Math.floor(Math.random()*90)+5, b = Math.floor(Math.random()*90)+5;
+            if(Math.abs(a-b) < 12 || used.has(a) || used.has(b)) { i--; continue; }
+            used.add(a); used.add(b);
+            if(isSnake) a > b ? snakes[a] = b : snakes[b] = a;
+            else a < b ? ladders[a] = b : ladders[b] = a;
+        }
+    };
+    make(8, true); make(8, false);
+}
+
+function drawLines() {
+    const canvas = document.getElementById('line-canvas'); const container = document.querySelector('.game-container');
+    canvas.width = container.clientWidth; canvas.height = container.clientHeight;
+    const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
+    const draw = (obj, col) => {
+        ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.setLineDash([5, 5]);
+        for (let s in obj) {
+            const sEl = document.getElementById('cell-' + s), eEl = document.getElementById('cell-' + obj[s]);
+            if(!sEl || !eEl) continue;
+            const x1 = sEl.offsetLeft + sEl.offsetWidth/2, y1 = sEl.offsetTop + sEl.offsetHeight/2;
+            const x2 = eEl.offsetLeft + eEl.offsetWidth/2, y2 = eEl.offsetTop + eEl.offsetHeight/2;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(x1+(x2-x1)/2+(Math.random()-0.5)*50, y1+(y2-y1)/2, x2, y2); ctx.stroke();
+        }
+    };
+    draw(snakes, 'rgba(255, 113, 206, 0.6)'); draw(ladders, 'rgba(5, 255, 161, 0.6)');
+}
+
+function updateUI() {
+    playerPos.forEach((pos, i) => {
+        const p = document.getElementById('p' + i); const cell = document.getElementById('cell-' + pos);
+        if(!cell || !p) return;
+        const offsets = [[-5,-5], [5,-5], [-5,5], [5,5]];
+        p.style.left = (cell.offsetLeft + cell.offsetWidth/2 - 5 + offsets[i][0]) + 'px';
+        p.style.top = (cell.offsetTop + cell.offsetHeight/2 - 5 + offsets[i][1]) + 'px';
+    });
+}
+
+function updateStatus() {
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-turn'));
+    const currentCell = document.getElementById('cell-' + playerPos[turn]);
+    if(currentCell) currentCell.classList.add('active-turn');
+    const realIdx = activeIndices[turn] + 1, pName = isCPUs[turn] ? "CPU " + realIdx : "PLAYER " + realIdx;
+    const statusEl = document.getElementById('status');
+    statusEl.innerText = `${pName} (${turnCount[turn]}手目)`;
+    statusEl.style.color = pColors[activeIndices[turn]];
+}
+
+async function handleRoll() {
+    if (isMoving) return; isMoving = true;
+    AudioEngine.init();
+    document.getElementById('roll-btn').disabled = true;
+    turnCount[turn]++;
+    let roll = 0;
+    for(let i=0; i<8; i++) { 
+        roll = Math.floor(Math.random()*6)+1; 
+        document.getElementById('dice-view').innerText = roll;
+        AudioEngine.playTone(600 + (i*50), 'sine', 0.05, 0.03);
+        await new Promise(r=>setTimeout(r,60)); 
+    }
+    AudioEngine.playTone(440, 'triangle', 0.1, 0.08);
+    for (let i = 0; i < roll; i++) {
+        if (playerPos[turn] >= 100) break;
+        playerPos[turn]++; updateUI(); 
+        AudioEngine.playTone(220, 'sine', 0.08, 0.05);
+        await new Promise(r=>setTimeout(r,180));
+    }
+    const jumpS = snakes[playerPos[turn]], jumpL = ladders[playerPos[turn]];
+    if (jumpS || jumpL) {
+        await new Promise(r=>setTimeout(r,400));
+        if (jumpS) {
+            playerPos[turn] = jumpS;
+            AudioEngine.playTone(300, 'sawtooth', 0.5, 0.05, -150);
+        } else {
+            playerPos[turn] = jumpL;
+            AudioEngine.playTone(523, 'sine', 0.1, 0.05);
+            setTimeout(()=>AudioEngine.playTone(659, 'sine', 0.1, 0.05), 100);
+            setTimeout(()=>AudioEngine.playTone(783, 'sine', 0.2, 0.05), 200);
+        }
+        updateUI(); await new Promise(r=>setTimeout(r,500));
+    }
+    if (playerPos[turn] >= 100) {
+        AudioEngine.playTone(880, 'square', 0.5, 0.1);
+        const title = turnCount[turn] <= 15 ? "梯子上りの達人" : turnCount[turn] <= 20 ? "蛇避けのプロ" : "不屈の冒険家";
+        alert(`PLAYER ${activeIndices[turn]+1} の勝利！\n【${turnCount[turn]}手：${title}】`);
+        if(!isCPUs[turn]) saveScore("P"+(activeIndices[turn]+1), turnCount[turn], title);
+        location.reload(); return;
+    }
+    turn = (turn + 1) % playerPos.length; isMoving = false;
+    document.getElementById('roll-btn').disabled = isCPUs[turn];
+    updateStatus();
+    if (isCPUs[turn]) setTimeout(handleRoll, 1000);
+}
+
+function saveScore(name, turns, title) {
+    let r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+    r.push({name, turns, title, date: new Date().toLocaleDateString()});
+    r.sort((a, b) => a.turns - b.turns);
+    localStorage.setItem(RANK_KEY, JSON.stringify(r.slice(0, 5)));
+}
+
+function showRanking() {
+    AudioEngine.playTone(440, 'sine', 0.05, 0.05);
+    const r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+    document.getElementById('ranking-list').innerHTML = r.length ? r.map((d, i)=>`
+        <div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px;">
+            <span style="color:var(--v-yellow)">#${i+1}</span> ${d.turns}手 - ${d.name}<br>
+            <span style="color:var(--v-cyan); font-size:10px;">【${d.title}】</span>
+        </div>`).join('') : '記録なし';
+    document.getElementById('ranking-modal').style.display = 'flex';
+}
+function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+initSetup();
+
+console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+            "color: #01cdfe; font-size: 14px;");
+</script>
+</body>
+</html>

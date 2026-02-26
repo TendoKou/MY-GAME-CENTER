@@ -1,0 +1,22 @@
+{
+  "name": "MY GAME CENTER",
+  "short_name": "OURGAMES",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#241734",
+  "theme_color": "#ff71ce",
+  "icons": [
+    {
+      "src": "OURGAMES.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "OURGAMES.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

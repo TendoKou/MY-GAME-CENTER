@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MY GAME CENTER</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="apple-touch-icon" href="OURGAMES.png">
+    <link rel="icon" type="image/png" href="OURGAME.png">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('オフライン機能準備完了！'))
+            .catch(err => console.log('準備失敗', err));
+        });I
+      }
+    </script>
+
+    <style>
+        :root {
+            --v-pink: #ff71ce;
+            --v-blue: #01cdfe;
+            --v-purple: #b967ff;
+            --v-cyan: #05ffa1;
+            --v-yellow: #fffb96;
+            --bg-dark: #241734;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: white; 
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0;
+            padding: 60px 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #4b0082 0%, #241734 100%);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(var(--v-blue) 1px, transparent 1px),
+                linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(300px) rotateX(60deg);
+            z-index: -1;
+            opacity: 0.3;
+            animation: gridMove 5s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 0 60px; }
+        }
+
+        .statue-bg {
+            position: fixed;
+            top: 20%;
+            left: 10%;
+            font-size: 150px;
+            opacity: 0.2;
+            z-index: -2;
+            filter: drop-shadow(0 0 20px var(--v-pink));
+            animation: rotateStatue 20s linear infinite, float 6s ease-in-out infinite;
+        }
+
+        @keyframes rotateStatue {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { top: 20%; }
+            50% { top: 25%; }
+        }
+
+        h1 { 
+            font-size: clamp(30px, 8vw, 60px); 
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+            background: linear-gradient(to bottom, var(--v-blue) 0%, var(--v-pink) 50%, var(--v-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(4px 4px 0px var(--v-purple));
+            margin: 0;
+            letter-spacing: 10px;
+            text-align: center;
+        }
+
+        .subtitle-container {
+            text-align: center;
+            margin-bottom: 50px;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: var(--v-cyan);
+            text-shadow: 2px 2px var(--bg-dark), 0 0 10px var(--v-cyan);
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+.subtitle {
+    font-size: 24px;
+    font-weight: bold;
+    background: linear-gradient(to right, var(--v-pink), var(--v-yellow), var(--v-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    margin-bottom: 15px;
+    display: inline-block;
+}
+
+@keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-1px, 1px); }
+    40% { transform: translate(-1px, -1px); }
+    60% { transform: translate(1px, 1px); }
+    80% { transform: translate(1px, -1px); }
+    100% { transform: translate(0); }
+}
+
+@keyframes blur-blink {
+    0%, 100% { filter: blur(0px) brightness(1); }
+    50% { filter: blur(1px) brightness(1.2); }
+}
+
+        .disclaimer {
+            font-size: clamp(11px, 3vw, 13px);
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+            letter-spacing: 0.05em;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .menu-grid {
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: clamp(10px, 3vw, 20px); 
+            width: 100%;
+            max-width: 600px;
+            z-index: 10;
+        }
+
+        .game-card {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            background: rgba(22, 22, 37, 0.75); 
+            box-shadow: inset 0 0 15px rgba(1, 205, 254, 0.2);
+            border: 2px solid var(--v-blue);
+            border-radius: clamp(11px, 4vw, 22px);
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            text-decoration: none;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--v-pink);
+            box-shadow: 
+                inset 0 0 20px rgba(255, 113, 206, 0.3),
+                0 0 20px rgba(255, 113, 206, 0.2);
+        }
+
+        .icon { 
+            font-size: clamp(24px, 7vw, 45px); 
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .icon {
+            transform: scale(1.1);
+        }
+
+        .title { 
+           font-weight: 900; 
+           font-size: clamp(9px, 2.5vw, 11px);
+           text-align: center;
+           padding: 0 4px;
+           line-height: 1.2;
+color: #000000;
+    letter-spacing: 0.05em;
+    word-break: keep-all;
+    text-shadow: 
+        1px  1px 0 #fff,
+       -1px  1px 0 #fff,
+        1px -1px 0 #fff,
+       -1px -1px 0 #fff,
+        0px  1px 0 #fff,
+        0px -1px 0 #fff,
+        1px  0px 0 #fff,
+       -1px  0px 0 #fff;
+
+        }
+
+        .deco-text {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 40px;
+            color: var(--v-pink);
+            opacity: 0.3;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+        }
+
+.title small {
+    display: block; 
+    margin-top: 5px;
+color: #000000;
+    letter-spacing: 0.05em;
+    word-break: keep-all;
+    text-shadow: 
+        1px  1px 0 #fff,
+       -1px  1px 0 #fff,
+        1px -1px 0 #fff,
+       -1px -1px 0 #fff,
+        0px  1px 0 #fff,
+        0px -1px 0 #fff,
+        1px  0px 0 #fff,
+       -1px  0px 0 #fff;
+
+       }
+
+.header-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    z-index: 100;
+}
+
+#sound-toggle {
+
+    position: absolute;
+    top: -10px;
+    right: -20px;
+    cursor: pointer;
+    font-size: clamp(20px, 5vw, 28px);
+    filter: drop-shadow(0 0 8px var(--v-cyan));
+    transition: transform 0.2s ease;
+    user-select: none;
+}
+
+#sound-toggle:active {
+    transform: scale(0.9);
+}
+
+@media (max-width: 480px) {
+    #sound-toggle {
+        top: -20px;
+        right: 0px;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="statue-bg">🗿</div>
+    <div class="deco-text">美学 ＡＥＳＴＨＥＴＩＣＳ</div>
+
+    <div class="header-container">
+        <h1>MY GAME CENTER</h1>
+        <div id="sound-toggle">🔊</div>
+    </div>
+    
+    <div class="subtitle-container">
+        <div class="subtitle">～ ようこそ ～</div>
+        <div class="disclaimer">
+            当サイトの制作にはGeminiを使用しております。<br>
+            <br>
+            環境による動作不良や、未修正の不具合が存在する場合がございます。<br> 
+            都度更新予定です。あらかじめご了承ください。<br>
+            <br> 
+            PWAに対応しているため、「ホーム画面に追加」から追加していただくと<br>オフライン環境での利用ができるかと思います。<br> 
+            <br> 
+            趣味で作ったものですが、よければ遊んでみてください。
+        </div>
+    </div>
+
+   <div class="menu-grid">
+        <a href="games/minesearcher.html" class="game-card">
+            <div class="icon">💣</div>
+            <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
+        </a>
+        <a href="games/pegjump.html" class="game-card">
+            <div class="icon">🟢</div>
+            <div class="title">ＰＥＧ ＪＵＭＰ<br><small>ペグ・ジャンプ</small></div>
+        </a>
+        <a href="games/snakesandladders.html" class="game-card">
+            <div class="icon">🐍🪜</div>
+            <div class="title">ＳＮＡＫＥＳ<br>＆<br>ＬＡＤＤＥＲＳ<br><small>蛇と梯子</small></div>
+        </a>
+        <a href="games/fruitbounceharvest.html" class="game-card">
+            <div class="icon">🍎</div>
+            <div class="title">ＦＲＵＩＴ ＢＯＵＮＣＥ<br><small>ＨＡＲＶＥＳＴ<br>フルーツ・バウンス・ハーベスト</small></div>
+        </a>
+        <a href="games/neonblockpuzzle.html" class="game-card">
+            <div class="icon">🧩</div>
+            <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰＵＺＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
+        </a>
+        <a href="games/neonjewelslide.html" class="game-card">
+            <div class="icon">💎</div>
+            <div class="title">ＮＥＯＮ ＪＥＷＥＬ ＳＬＩＤＥ<br><small>ネオン・ジュエル・スライド</small></div>
+        </a>
+        <div class="game-card">
+            <div class="icon">❓</div>
+            <div class="title">Ｃｏｍｉｎｇ Ｓｏｏｎ...<br><small>準備中</small></div>
+        </div>
+    </div>
+
+<script>
+const AudioEngine = {
+    ctx: null,
+
+    isMuted: localStorage.getItem('v_snd_muted') === 'true',
+    isBGMPlaying: false,
+    
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        this.syncMuteState();
+    },
+
+    syncMuteState() {
+        this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
+        this.updateButton();
+        if (this.ctx) {
+            if (this.isMuted) {
+                if (this.ctx.state !== 'suspended') this.ctx.suspend();
+            } else {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+        }
+    },
+
+    updateButton() {
+        const btn = document.getElementById('sound-toggle');
+        if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊';
+    },
+
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem('v_snd_muted', this.isMuted);
+        this.syncMuteState();
+    },
+
+    playHover() {
+        if (this.isMuted || !this.ctx || this.ctx.state === 'suspended') return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+    },
+
+    playClick(callback) {
+        this.init();
+        if (this.isMuted) {
+            setTimeout(callback, 200);
+            return;
+        }
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+        setTimeout(callback, 200);
+    },
+
+    startBGM() {
+        if (this.isBGMPlaying) return;
+        this.init();
+        this.isBGMPlaying = true;
+        let step = 0;
+        const melody = [110, 0, 146, 110, 164, 0, 110, 98];
+        
+        setInterval(() => {
+            if (this.isMuted || !this.ctx) return;
+            if (this.ctx.state === 'suspended') return;
+
+            const freq = melody[step % melody.length];
+            if (freq > 0) {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(now + 0.8);
+            }
+            step++;
+        }, 600);
+    }
+};
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') {
+        AudioEngine.syncMuteState();
+    }
+});
+
+window.addEventListener('pageshow', (event) => {
+    AudioEngine.syncMuteState();
+});
+document.addEventListener('DOMContentLoaded', () => {
+    AudioEngine.updateButton();
+
+    document.getElementById('sound-toggle').addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioEngine.init();
+        AudioEngine.toggleMute();
+    });
+
+    document.querySelectorAll('.game-card').forEach(card => {
+        card.addEventListener('mouseenter', () => AudioEngine.playHover());
+        card.addEventListener('touchstart', () => AudioEngine.init(), {passive: true});
+        card.addEventListener('click', (e) => {
+            const url = card.getAttribute('href');
+            if (!url) return;
+            e.preventDefault();
+            AudioEngine.playClick(() => {
+                window.location.href = url;
+            });
+        });
+    });
+});
+
+const unlockAudio = () => {
+    AudioEngine.init();
+    AudioEngine.startBGM();
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+};
+window.addEventListener('click', unlockAudio);
+window.addEventListener('touchstart', unlockAudio);
+
+console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+            "color: #01cdfe; font-size: 14px;");
+</script>
+</body>
+</html>
