@@ -122,8 +122,10 @@
             ctx: null, 
             isMuted: localStorage.getItem('v_snd_muted') === 'true',
             init() { 
-                if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                if(this.ctx.state === 'suspended') this.ctx.resume();
+                try {
+                    if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                } catch(e) { console.error("Audio error:", e); }
             },
             updateIcons() {
                 const icon = this.isMuted ? '🔇' : '🔊';
@@ -137,18 +139,20 @@
                 this.isMuted = !this.isMuted; 
                 localStorage.setItem('v_snd_muted', this.isMuted); 
                 this.updateIcons();
-                if(!this.isMuted) this.play(440, 'sine', 0.05, 0.005);
+                if(!this.isMuted) this.play(440, 'sine', 0.05, 0.05);
             },
             play(f, t, d, v) { 
                 if(this.isMuted) return; 
                 this.init(); 
+                if(!this.ctx) return;
+
                 const o = this.ctx.createOscillator(), g = this.ctx.createGain(); 
                 o.type = t; 
                 o.frequency.setValueAtTime(f, this.ctx.currentTime); 
                 
-                const softVol = v * 0.1;
-                g.gain.setValueAtTime(0, this.ctx.currentTime);
-                g.gain.linearRampToValueAtTime(softVol, this.ctx.currentTime + 0.01);
+                const softVol = v * 0.5;
+                g.gain.setValueAtTime(0.00001, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(softVol, this.ctx.currentTime + 0.01);
                 g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + d); 
                 
                 o.connect(g); g.connect(this.ctx.destination); 
@@ -157,16 +161,10 @@
         };
 
         function startGame(mode) { 
+            AudioEngine.init();
             gameMode = mode; 
             document.getElementById('overlay').style.display = 'none'; 
-            AudioEngine.play(523, 'sine', 0.05, 0.01); 
-            init(); 
-        }
-
-        function startGame(mode) { 
-            gameMode = mode; 
-            document.getElementById('overlay').style.display = 'none'; 
-            AudioEngine.play(660, 'sine', 0.08, 0.02); 
+            AudioEngine.play(523, 'sine', 0.1, 0.05); 
             init(); 
         }
 
@@ -176,12 +174,6 @@
         const DEFS = [{t:'💎',c:'#ff71ce'},{t:'🌟',c:'#fffb96'},{t:'🌙',c:'#01cdfe'},{t:'🍀',c:'#05ffa1'},{t:'🔥',c:'#ff9a00'},{t:'🔮',c:'#b967ff'}];
         let board = [], score = 0, timeLeft = 60, timerInterval = null, isPlaying = false, gameMode = 'time', isProcessing = false;
         let feverGauge = 0, isFever = false, dragStart = null, lastHintTimer = Date.now();
-
-        function startGame(mode) { 
-            gameMode=mode; document.getElementById('overlay').style.display='none'; 
-            AudioEngine.play(880, 'sine', 0.2, 0.05); 
-            init(); 
-        }
 
         function init() {
             const container = document.getElementById('game-container'); container.innerHTML = '';
@@ -199,6 +191,80 @@
                 }
             }
             resetHintTimer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function createJewel(r, c, anim, type, special=null) {
+            const d = DEFS.find(x => x.t === type);
+            const el = document.createElement('div');
+            el.className = 'jewel' + (special ? ' special' : '');
+            el.innerText = special || type;
+            el.style.color = d.c;
+            el.style.textShadow = `0 0 8px ${d.c}`;
+            el.style.left = (c * J_W) + 'px';
+            el.style.top = (anim ? -J_W : r * J_W) + 'px';
+            document.getElementById('game-container').appendChild(el);
+            const j = { r, c, type, el, special };
+            board[r][c] = j;
+            if(anim) setTimeout(() => el.style.top = (r * J_W) + 'px', 10);
+            return j;
+        }
+
+        function updatePositions() {
+            board.flat().forEach(j => { if(j) { j.el.style.left = (j.c * J_W) + 'px'; j.el.style.top = (j.r * J_W) + 'px'; } });
+        }
+
+        function updateScore(n=0) { score += n; document.getElementById('score-display').innerText = String(score).padStart(5, '0'); }
+
+        function spawnParticle(x, y, color) {
+            for(let i=0; i<6; i++) {
+                const p = document.createElement('div'); p.className = 'particle';
+                p.style.left = x+'px'; p.style.top = y+'px'; p.style.background = color;
+                p.style.boxShadow = `0 0 5px ${color}`;
+                const tx = (Math.random()-0.5)*100, ty = (Math.random()-0.5)*100;
+                p.style.setProperty('--tx', tx+'px'); p.style.setProperty('--ty', ty+'px');
+                document.getElementById('game-container').appendChild(p);
+                setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        function resetHintTimer() { lastHintTimer = Date.now(); }
+        function clearHints() { document.querySelectorAll('.hint-anim').forEach(el => el.classList.remove('hint-anim')); }
+        function gameLoop() { if(Date.now() - lastHintTimer > 5000) { showHint(); resetHintTimer(); } requestAnimationFrame(gameLoop); }
+
+        function showHint() {
+            const move = findMove();
+            if(move) { move.a.el.classList.add('hint-anim'); move.b.el.classList.add('hint-anim'); }
+        }
+
+        function findMove() {
+            for(let r=0; r<SIZE; r++) {
+                for(let c=0; c<SIZE; c++) {
+                    const directions = [[0,1],[1,0]];
+                    for(let [dr, dc] of directions) {
+                        let nr=r+dr, nc=c+dc;
+                        if(nr<SIZE && nc<SIZE) {
+                            let a=board[r][c], b=board[nr][nc];
+                            if(!a || !b) continue;
+                            board[r][c]=b; board[nr][nc]=a;
+                            let match = checkMatchAt(r, c) || checkMatchAt(nr, nc);
+                            board[r][c]=a; board[nr][nc]=b;
+                            if(match) return {a, b};
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function checkMatchAt(r, c) {
+            const j = board[r][c]; if(!j) return false;
+            let h=1, v=1;
+            for(let i=c-1; i>=0 && board[r][i]?.type===j.type; i--) h++;
+            for(let i=c+1; i<SIZE && board[r][i]?.type===j.type; i--) h++;
+            for(let i=r-1; i>=0 && board[i][c]?.type===j.type; i--) v++;
+            for(let i=r+1; i<SIZE && board[i][c]?.type===j.type; i--) v++;
+            return h>=3 || v>=3;
         }
 
         document.getElementById('game-box').addEventListener('pointerdown', (e) => {
@@ -211,10 +277,27 @@
                 dragStart = board[cy][cx];
                 if(dragStart) {
                     dragStart.el.classList.add('selected');
-                    AudioEngine.play(600, 'sine', 0.05, 0.02);
+                    AudioEngine.play(600, 'sine', 0.05, 0.005);
                 }
             }
         });
+
+        window.addEventListener('pointermove', (e) => {
+            if(!dragStart || isProcessing) return;
+            const rect = document.getElementById('game-container').getBoundingClientRect();
+            const cx = Math.floor((e.clientX - rect.left) / J_W);
+            const cy = Math.floor((e.clientY - rect.top) / J_W);
+            if(cx>=0 && cx<SIZE && cy>=0 && cy<SIZE && (cx!==dragStart.c || cy!==dragStart.r)) {
+                if(Math.abs(cx-dragStart.c) + Math.abs(cy-dragStart.r) === 1) {
+                    const target = board[cy][cx];
+                    dragStart.el.classList.remove('selected');
+                    swapJewels(dragStart, target);
+                    dragStart = null;
+                }
+            }
+        });
+
+        window.addEventListener('pointerup', () => { if(dragStart) dragStart.el.classList.remove('selected'); dragStart = null; });
 
         async function swapJewels(a, b) {
             isProcessing = true;
@@ -230,7 +313,7 @@
                 a.r = ar; a.c = ac; b.r = br; b.c = bc;
                 updatePositions();
                 isProcessing = false;
-                AudioEngine.play(200, 'sine', 0.1, 0.02);
+                AudioEngine.play(200, 'sine', 0.1, 0.01);
             }
         }
 
@@ -257,7 +340,7 @@
             if(toRemove.size > 0) {
                 toRemove.forEach(j => { if(board[j.r][j.c]) { spawnParticle(j.c*J_W+20, j.r*J_W+20, j.el.style.color); j.el.remove(); board[j.r][j.c]=null; updateScore(isFever ? 20 : 10); updateFever(1.5); } });
                 specials.forEach(g => { if(!board[g.r][g.c]) createJewel(g.r, g.c, false, g.t, g.s); });
-                AudioEngine.play(800, 'sine', 0.1, 0.02);
+                AudioEngine.play(800, 'sine', 0.1, 0.01);
                 fillGaps();
                 return true;
             }
@@ -266,11 +349,45 @@
             return false;
         }
 
+        async function fillGaps() {
+            for(let c=0; c<SIZE; c++) {
+                let emptySlots = 0;
+                for(let r=SIZE-1; r>=0; r--) {
+                    if(!board[r][c]) emptySlots++;
+                    else if(emptySlots>0) {
+                        let j = board[r][c];
+                        board[r+emptySlots][c] = j;
+                        board[r][c] = null;
+                        j.r = r+emptySlots;
+                    }
+                }
+                for(let i=0; i<emptySlots; i++) {
+                    let type = DEFS[Math.floor(Math.random()*DEFS.length)].t;
+                    createJewel(emptySlots-1-i, c, true, type);
+                }
+            }
+            updatePositions();
+            await new Promise(r => setTimeout(r, 300));
+            checkMatches();
+        }
+
+        function removeAt(r, c) {
+            if(r>=0 && r<SIZE && c>=0 && c<SIZE && board[r][c]) {
+                const j = board[r][c];
+                if(j.special) { triggerSpecial(j); }
+                else {
+                    spawnParticle(c*J_W+20, r*J_W+20, j.el.style.color);
+                    j.el.remove(); board[r][c]=null;
+                    updateScore(isFever ? 20 : 10); updateFever(1);
+                }
+            }
+        }
+
         function triggerSpecial(j) {
             const r=j.r, c=j.c, s=j.special, t=j.type; if(!board[r][c]) return;
             spawnParticle(c*J_W+20, r*J_W+20, '#fff');
             j.el.remove(); board[r][c]=null;
-            AudioEngine.play(400, 'square', 0.15, 0.03);
+            AudioEngine.play(400, 'square', 0.15, 0.01);
             if(s==='↔️') { for(let i=0; i<SIZE; i++) removeAt(r, i); }
             else if(s==='↕️') { for(let i=0; i<SIZE; i++) removeAt(i, c); }
             else if(s==='💣') { for(let i=r-1; i<=r+1; i++) for(let k=c-1; k<=c+1; k++) removeAt(i, k); }
@@ -283,7 +400,7 @@
                 isFever=true; 
                 document.getElementById('game-box').classList.add('fever-mode');
                 document.body.classList.add('fever-active');
-                AudioEngine.play(1000, 'sine', 0.3, 0.05);
+                AudioEngine.play(1000, 'sine', 0.3, 0.02);
                 let ft=setInterval(() => {
                     feverGauge-=1.5; document.getElementById('fever-bar').style.width=feverGauge+'%';
                     if(feverGauge<=0){ 
@@ -300,13 +417,13 @@
             timeLeft--; document.getElementById('timer-label').innerText = timeLeft+'s';
             if(timeLeft<=10) { 
                 document.getElementById('game-box').classList.add('danger-pulse'); 
-                AudioEngine.play(300, 'sine', 0.05, 0.02); 
+                AudioEngine.play(300, 'sine', 0.05, 0.01); 
             }
             if(timeLeft<=0) endGame();
         }
 
         function handleNoMoves() {
-            AudioEngine.play(200, 'sawtooth', 0.4, 0.02);
+            AudioEngine.play(200, 'sawtooth', 0.4, 0.01);
             updateScore(500); 
             board.flat().forEach(j => { if(j) { spawnParticle(j.c*J_W+20, j.r*J_W+20, '#fff'); j.el.remove(); } });
             board = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
@@ -319,7 +436,7 @@
         }
 
         function saveAndReset() {
-            AudioEngine.play(440, 'sine', 0.1, 0.02);
+            AudioEngine.play(440, 'sine', 0.1, 0.01);
             const wantsToSave = confirm("スコアを登録しますか？");
             if (wantsToSave) {
                 const name = prompt("名前:", "PLAYER");
@@ -336,7 +453,7 @@
         }
 
         function showRanking() {
-            AudioEngine.play(440, 'sine', 0.1, 0.02);
+            AudioEngine.play(440, 'sine', 0.1, 0.01);
             const list = document.getElementById('ranking-list');
             list.innerHTML = '';
             const ranking = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
@@ -345,13 +462,15 @@
             document.getElementById('ranking-modal').style.display = 'flex';
         }
 
+        function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+
         function titleAction() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.02); 
+            AudioEngine.play(440, 'sine', 0.1, 0.01); 
             if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); 
         }
         
         function backToMenu() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.02);
+            AudioEngine.play(440, 'sine', 0.1, 0.01);
             if(confirm("ゲームを終了してメインページに戻りますか？")) { 
                 if (window.history.length > 1) window.history.back(); 
                 else location.href = '../index.html'; 
@@ -360,7 +479,7 @@
 
         function endGame() { 
             isPlaying=false; clearInterval(timerInterval); 
-            AudioEngine.play(100, 'sawtooth', 0.8, 0.05);
+            AudioEngine.play(100, 'sawtooth', 0.8, 0.03);
             alert("TIME UP! SCORE: " + score); 
             saveAndReset(); 
         }
