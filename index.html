@@ -592,8 +592,10 @@ const AudioEngine = {
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-            gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
             gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+            
             osc.connect(gain); 
             gain.connect(this.masterGain);
             osc.start(); 
