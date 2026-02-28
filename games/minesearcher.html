@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>MINE SEARCHER</title>
+    <link rel="icon" href="data:,">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         :root {
@@ -170,11 +171,12 @@
 
                 const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                if (type === 'clear') { osc.type = 'square'; osc.frequency.setValueAtTime(523, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1046, this.ctx.currentTime + 0.3); gain.gain.setValueAtTime(0.1, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.4); }
-                else if (type === 'bomb') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, this.ctx.currentTime); gain.gain.setValueAtTime(0.2, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.3); }
-                else if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, this.ctx.currentTime); gain.gain.setValueAtTime(0.05, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.1); }
-                else if (type === 'flag') { osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.ctx.currentTime); gain.gain.setValueAtTime(0.05, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.05); }
-                else if (type === 'switch') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, this.ctx.currentTime); gain.gain.setValueAtTime(0.05, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.1); }
+                
+                if (type === 'clear') { osc.type = 'square'; osc.frequency.setValueAtTime(523, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1046, this.ctx.currentTime + 0.3); gain.gain.setValueAtTime(0.03, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.4); }
+                else if (type === 'bomb') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, this.ctx.currentTime); gain.gain.setValueAtTime(0.01, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.3); }
+                else if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, this.ctx.currentTime); gain.gain.setValueAtTime(0.015, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.1); }
+                else if (type === 'flag') { osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.ctx.currentTime); gain.gain.setValueAtTime(0.015, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.05); }
+                else if (type === 'switch') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, this.ctx.currentTime); gain.gain.setValueAtTime(0.015, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.1); }
             }
         };
 

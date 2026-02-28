@@ -122,29 +122,37 @@
             ctx: null, 
             isMuted: localStorage.getItem('v_snd_muted') === 'true',
             init() { 
-                if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-                this.updateIcons();
+                if(!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if(this.ctx.state === 'suspended') this.ctx.resume();
             },
             updateIcons() {
                 const icon = this.isMuted ? '🔇' : '🔊';
-                document.getElementById('sound-toggle').innerText = icon;
-                document.getElementById('overlay-sound-toggle').innerText = icon;
+                const el1 = document.getElementById('sound-toggle');
+                const el2 = document.getElementById('overlay-sound-toggle');
+                if(el1) el1.innerText = icon;
+                if(el2) el2.innerText = icon;
             },
             toggleMute() { 
+                this.init();
                 this.isMuted = !this.isMuted; 
                 localStorage.setItem('v_snd_muted', this.isMuted); 
                 this.updateIcons();
+
+                if(!this.isMuted) this.play(440, 'sine', 0.1, 0.05);
             },
             play(f, t, d, v) { 
                 if(this.isMuted) return; 
                 this.init(); 
-                if(this.ctx.state==='suspended') this.ctx.resume(); 
-                const o=this.ctx.createOscillator(), g=this.ctx.createGain(); 
-                o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); 
+                const o = this.ctx.createOscillator(), g = this.ctx.createGain(); 
+                o.type = t; 
+                o.frequency.setValueAtTime(f, this.ctx.currentTime); 
                 g.gain.setValueAtTime(v, this.ctx.currentTime); 
-                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime+d); 
+
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + d); 
                 o.connect(g); g.connect(this.ctx.destination); 
-                o.start(); o.stop(this.ctx.currentTime+d); 
+                o.start(); o.stop(this.ctx.currentTime + d); 
             }
         };
 
@@ -341,7 +349,10 @@
 
         function updateTimer() {
             timeLeft--; document.getElementById('timer-label').innerText = timeLeft+'s';
-            if(timeLeft<=10) { document.getElementById('game-box').classList.add('danger-pulse'); AudioEngine.play(300, 'sine', 0.05, 0.05); }
+            if(timeLeft<=10) { 
+                document.getElementById('game-box').classList.add('danger-pulse'); 
+                AudioEngine.play(300, 'sine', 0.05, 0.05); 
+            }
             if(timeLeft<=0) endGame();
         }
 
@@ -375,11 +386,10 @@
             if(board[r1][c1].special || board[r2][c2].special) return true;
             const b = board.map(row => row.map(j => ({type: j ? j.type : null})));
             [b[r1][c1], b[r2][c2]] = [b[r2][c2], b[r1][c1]];
-         
-   for(let r=0; r<SIZE; r++) for(let c=0; c<SIZE; c++) {
+            for(let r=0; r<SIZE; r++) for(let c=0; c<SIZE; c++) {
                 let t=b[r][c].type; if(!t) continue;
-                if(c<SIZE-2 && t===b[r][c+1].type && t===b[r][c+2].type) return true;
-                if(r<SIZE-2 && t===b[r+1][c].type && t===b[r+2][c].type) return true;
+                if(c<SIZE-2 && b[r][c+1] && b[r][c+2] && t===b[r][c+1].type && t===b[r][c+2].type) return true;
+                if(r<SIZE-2 && b[r+1][c] && b[r+2][c] && t===b[r+1][c].type && t===b[r+2][c].type) return true;
             }
             return false;
         }
@@ -412,11 +422,20 @@
         }
 
         function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
-        function titleAction() { AudioEngine.play(440, 'sine', 0.1, 0.05); if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); }
+        
+        function titleAction() { 
+            AudioEngine.play(440, 'sine', 0.1, 0.05); 
+            if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); 
+        }
+        
         function backToMenu() { 
             AudioEngine.play(440, 'sine', 0.1, 0.05);
-            if(confirm("ゲームを終了してメインページに戻りますか？")) { if (window.history.length > 1) window.history.back(); else location.href = '../index.html'; }
+            if(confirm("ゲームを終了してメインページに戻りますか？")) { 
+                if (window.history.length > 1) window.history.back(); 
+                else location.href = '../index.html'; 
+            }
         }
+
         function endGame() { 
             isPlaying=false; clearInterval(timerInterval); 
             AudioEngine.play(100, 'sawtooth', 0.8, 0.1);
@@ -424,27 +443,23 @@
             saveAndReset(); 
         }
 
-function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'v_snd_muted') {
+                AudioEngine.isMuted = (e.newValue === 'true');
+                AudioEngine.updateIcons();
+            }
+        });
 
-function backToMenu() {
-    if(confirm("ゲームを終了してメインページに戻りますか？")) {
-        window.location.href = '../index.html';
-    }
-}
+        window.addEventListener('pageshow', () => {
+            AudioEngine.isMuted = (localStorage.getItem('v_snd_muted') === 'true');
+            AudioEngine.updateIcons();
+        });
 
-window.addEventListener('storage', (e) => {
-    if (e.key === 'v_snd_muted') Snd.sync();
-});
+        init();
 
-window.addEventListener('pageshow', () => {
-    Snd.sync();
-});
-
-init();
-
-console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
-            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
-            "color: #01cdfe; font-size: 14px;");</script>
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+                    "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+                    "color: #01cdfe; font-size: 14px;");
     </script>
 </body>
 </html>
