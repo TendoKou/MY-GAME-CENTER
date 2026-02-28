@@ -80,8 +80,9 @@
     </div>
 
     <div class="rule-guide">
-        <span class="rule-snake">●ヘビ：戻る</span>　
-        <span class="rule-ladder">●ハシゴ：進む</span>
+    <span class="rule-snake">●<ruby>蛇<rt>へび</rt></ruby>：<ruby>戻<rt>もど</rt></ruby>る</span>　
+    <span class="rule-ladder">●<ruby>梯子<rt>はしご</rt></ruby>：<ruby>進<rt>すす</rt></ruby>む</span>
+</div>
     </div>
 
     <div class="game-container">
@@ -93,11 +94,13 @@
     <div id="status" style="font-size:13px; height:18px; margin-bottom:5px; font-weight:bold;"></div>
     
     <div class="control-panel">
-        <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="showRanking()">RANKING</button>
-        <button id="roll-btn" class="btn" style="flex: 2; border-color:var(--v-yellow); color:var(--v-yellow); font-size:14px;" onclick="handleRoll()">サイコロを振る</button>
-        <button id="title-btn" class="btn" style="border-color:var(--v-purple); color:var(--v-purple); display:none;" onclick="backToTitle()">TITLE</button>
-        <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="backToMenu()">MENU</button>
-    </div>
+    <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="showRanking()">RANKING</button>
+    <button id="roll-btn" class="btn" style="flex: 2; border-color:var(--v-yellow); color:var(--v-yellow); font-size:14px;" onclick="handleRoll()">
+        <ruby> サイコロ</rt></ruby>を<ruby>振<rt>ふ</rt></ruby>る🎲
+    </button>
+    <button id="title-btn" class="btn" style="border-color:var(--v-purple); color:var(--v-purple); display:none;" onclick="backToTitle()">TITLE</button>
+    <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="backToMenu()">MENU</button>
+</div>
 
     <div id="ranking-modal">
         <div class="modal-content">
@@ -175,9 +178,13 @@ function initSetup() {
         row.className = 'player-row';
         row.innerHTML = `
             <span style="color:${pColors[i]}; font-weight:bold; font-size:14px;">P${i+1}</span>
-            <button id="p${i}-h" class="btn ${i===0?'active':''}" onclick="setPlayerType(${i}, 'human')">人間</button>
+            <button id="p${i}-h" class="btn ${i===0?'active':''}" onclick="setPlayerType(${i}, 'human')">
+                <ruby>人間<rt>にんげん</rt></ruby>
+            </button>
             <button id="p${i}-c" class="btn btn-cpu ${i===1?'active':''}" onclick="setPlayerType(${i}, 'cpu')">CPU</button>
-            <button id="p${i}-off" class="btn ${i>1?'active':''}" onclick="setPlayerType(${i}, 'off')">不参加</button>
+            <button id="p${i}-off" class="btn ${i>1?'active':''}" onclick="setPlayerType(${i}, 'off')">
+                <ruby>不参加<rt>ふさんか</rt></ruby>
+            </button>
         `;
         list.appendChild(row);
     }

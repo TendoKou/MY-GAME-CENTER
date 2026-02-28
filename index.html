@@ -204,6 +204,7 @@
             text-decoration: none;
             transition: all 0.3s ease;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .game-card:hover {
@@ -273,6 +274,95 @@
         @media (max-width: 480px) {
             #sound-toggle { top: -20px; right: 0px; }
         }
+
+        #draw-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 26, 0.98);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            backdrop-filter: blur(15px);
+        }
+
+        #draw-canvas {
+            background: #000;
+            border: 4px solid var(--v-purple);
+            box-shadow: 0 0 20px rgba(185, 103, 255, 0.5);
+            border-radius: 20px;
+            touch-action: none;
+            max-width: 95vw;
+            max-height: 55vh;
+        }
+
+        .draw-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .color-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .color-btn.active { transform: scale(1.25); box-shadow: 0 0 10px #fff; }
+
+        .tool-btn {
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--v-blue);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tool-btn.active { background: var(--v-blue); color: #000; font-weight: bold; }
+
+        .draw-action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .draw-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 50px;
+            border: 2px solid;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .draw-btn:active { transform: scale(0.95); }
+        
+        .size-slider {
+            width: 100px;
+            accent-color: var(--v-cyan);
+        }
+
+        ruby rt { font-size: 0.6em; }
     </style>
 </head>
 
@@ -288,7 +378,9 @@
     
     <div class="subtitle-container">
         <div class="subtitle">～ ようこそ ～</div>
-        <div class="disclaimer">当サイトの制作にはGeminiを使用しております。</div>
+        <div class="disclaimer"><p>
+    <ruby>当<rt>とう</rt></ruby>サイトの<ruby>制作<rt>せいさく</rt></ruby>にはGeminiを<ruby>使用<rt>しよう</rt></ruby>しております。
+</p></div>
 
         <div class="about-row">
             <a href="about/aboutthissite.html" class="game-card about-card" style="border-color: var(--v-cyan);">
@@ -302,6 +394,11 @@
         </div>
 
         <div class="menu-grid">
+            <div class="game-card" id="draw-menu-card" style="border-color: var(--v-purple);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-purple));">🎨</div>
+                <div class="title">ＮＥＯＮ ＤＲＡＷ<br><small>ネオン・ドロー（お絵描き）</small></div>
+            </div>
+            </a>
             <a href="games/minesearcher.html" class="game-card">
                 <div class="icon">💣</div>
                 <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
@@ -333,7 +430,42 @@
         </div>
     </div>
 
+    <div id="draw-modal">
+        <h2 style="color:var(--v-purple); margin-bottom:10px; text-shadow:0 0 10px var(--v-purple); font-size: 1.2rem;">ネオン・ドロー
+        </h2>
+        
+        <canvas id="draw-canvas"></canvas>
+        
+        <div class="draw-controls">
+            <div class="control-group">
+                <div class="color-btn active" style="background: var(--v-cyan);" onclick="setNeonColor('#05ffa1', this)"></div>
+                <div class="color-btn" style="background: var(--v-pink);" onclick="setNeonColor('#ff71ce', this)"></div>
+                <div class="color-btn" style="background: var(--v-blue);" onclick="setNeonColor('#01cdfe', this)"></div>
+                <div class="color-btn" style="background: var(--v-yellow);" onclick="setNeonColor('#fffb96', this)"></div>
+                <div class="color-btn" style="background: #ffffff;" onclick="setNeonColor('#ffffff', this)"></div>
+                <input type="range" class="size-slider" min="1" max="20" value="5" oninput="setLineWidth(this.value)">
+            </div>
+
+            <div class="control-group">
+                <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">✏️ <ruby>自由<rt>じゆう</rt></ruby></button>
+                <button class="tool-btn" id="tool-rect" onclick="setTool('rect')">□ <ruby>四角<rt>しかく</rt></ruby></button>
+                <button class="tool-btn" id="tool-circle" onclick="setTool('circle')">○ <ruby>丸<rt>まる</rt></ruby></button>
+                <button class="tool-btn" onclick="undo()">↩️ <ruby>戻<rt>もど</rt></ruby>る</button>
+            </div>
+
+            <div class="draw-action-btns">
+                <button class="draw-btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="clearCanvas()">
+                    <ruby>全部消<rt>ぜんぶけ</rt></ruby>す
+                </button>
+                <button class="draw-btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="closeDraw()">
+                    <ruby>終<rt>お</rt></ruby>わる
+                </button>
+            </div>
+        </div>
+    </div>
+
 <script>
+
 const AudioEngine = {
     ctx: null,
     masterGain: null,
@@ -348,7 +480,6 @@ const AudioEngine = {
         }
         this.syncMuteState();
     },
-
     syncMuteState() {
         this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
         this.updateButton();
@@ -356,18 +487,15 @@ const AudioEngine = {
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
         }
     },
-
     updateButton() {
         const btn = document.getElementById('sound-toggle');
         if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊';
     },
-
     toggleMute() {
         this.isMuted = !this.isMuted;
         localStorage.setItem('v_snd_muted', this.isMuted);
         this.syncMuteState();
     },
-
     playHover() {
         if (!this.ctx || this.isMuted) return;
         const osc = this.ctx.createOscillator();
@@ -380,11 +508,10 @@ const AudioEngine = {
         gain.connect(this.masterGain);
         osc.start(); osc.stop(this.ctx.currentTime + 0.1);
     },
-
     playClick(callback) {
         this.init();
         if (this.isMuted) {
-            setTimeout(callback, 200);
+            if(callback) setTimeout(callback, 200);
             return;
         }
         const osc = this.ctx.createOscillator();
@@ -396,19 +523,16 @@ const AudioEngine = {
         osc.connect(gain); 
         gain.connect(this.masterGain);
         osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-        setTimeout(callback, 200);
+        if(callback) setTimeout(callback, 200);
     },
-
     startBGM() {
         if (this.isBGMPlaying) return;
         this.init();
         this.isBGMPlaying = true;
         let step = 0;
         const melody = [110, 0, 146, 110, 164, 0, 110, 98];
-        
         setInterval(() => {
             if (!this.ctx || this.isMuted) return;
-
             const freq = melody[step % melody.length];
             if (freq > 0) {
                 const now = this.ctx.currentTime;
@@ -427,18 +551,164 @@ const AudioEngine = {
     }
 };
 
+const canvas = document.getElementById('draw-canvas');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+let startX, startY;
+let snapshot;
+let undoStack = [];
+
+let currentSettings = {
+    color: '#05ffa1',
+    tool: 'pen',
+    lineWidth: 5
+};
+
+function resizeCanvas() {
+    const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.55);
+    canvas.width = size;
+    canvas.height = size;
+    applyDrawingStyles();
+    saveState();
+}
+
+function applyDrawingStyles() {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = currentSettings.lineWidth;
+    ctx.strokeStyle = currentSettings.color;
+    ctx.shadowBlur = currentSettings.lineWidth * 2;
+    ctx.shadowColor = currentSettings.color;
+}
+
+function setNeonColor(color, el) {
+    currentSettings.color = color;
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    applyDrawingStyles();
+}
+
+function setLineWidth(val) {
+    currentSettings.lineWidth = val;
+    applyDrawingStyles();
+}
+
+function setTool(tool) {
+    currentSettings.tool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById('tool-' + tool);
+    if(target) target.classList.add('active');
+}
+
+function saveState() {
+    if (undoStack.length > 20) undoStack.shift();
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+}
+
+function undo() {
+    if (undoStack.length > 1) {
+        undoStack.pop();
+        ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+        AudioEngine.playClick();
+    }
+}
+
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    const pos = getPos(e);
+    startX = pos.x;
+    startY = pos.y;
+    snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    if (currentSettings.tool === 'pen') {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+    }
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const pos = getPos(e);
+
+    if (currentSettings.tool === 'pen') {
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    } else {
+        ctx.putImageData(snapshot, 0, 0);
+        if (currentSettings.tool === 'rect') {
+            ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        } else if (currentSettings.tool === 'circle') {
+            const r = Math.sqrt(Math.pow(pos.x - startX, 2) + Math.pow(pos.y - startY, 2));
+            ctx.beginPath();
+            ctx.arc(startX, startY, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
+}
+
+function stopDrawing() {
+    if(isDrawing) {
+        saveState();
+        isDrawing = false;
+    }
+}
+
+function clearCanvas() {
+    if(confirm("すべて消去しますか？")) {
+        AudioEngine.playClick();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        saveState();
+    }
+}
+
+function openDraw() {
+    document.getElementById('draw-modal').style.display = 'flex';
+    resizeCanvas();
+
+    canvas.onmousedown = startDrawing;
+    window.onmousemove = draw;
+    window.onmouseup = stopDrawing;
+    canvas.ontouchstart = startDrawing;
+    canvas.ontouchmove = draw;
+    canvas.ontouchend = stopDrawing;
+}
+
+function closeDraw() {
+
+    if(confirm("お絵描きを終わりますか？\n（描いた絵は保存されません）")) {
+        AudioEngine.playClick();
+        document.getElementById('draw-modal').style.display = 'none';
+    }
+}
+
 window.addEventListener('storage', (e) => {
     if (e.key === 'v_snd_muted') AudioEngine.syncMuteState();
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     AudioEngine.updateButton();
+    
     document.getElementById('sound-toggle').addEventListener('click', (e) => {
         e.stopPropagation();
         AudioEngine.init();
         AudioEngine.toggleMute();
     });
+    
+    document.getElementById('draw-menu-card').addEventListener('click', (e) => {
+        e.preventDefault();
+        AudioEngine.playClick(() => { openDraw(); });
+    });
+
     document.querySelectorAll('.game-card').forEach(card => {
+        if(card.id === 'draw-menu-card') return;
         card.addEventListener('mouseenter', () => AudioEngine.playHover());
         card.addEventListener('click', (e) => {
             const url = card.getAttribute('href');
