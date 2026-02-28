@@ -105,12 +105,11 @@
     </div>
     <script>
         const AudioEngine = {
-            ctx: null, isMuted: localStorage.getItem('v_snd_muted') === 'true', bgmInterval: null,
-            init() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.startBGM(); } this.sync(); },
+            ctx: null, isMuted: localStorage.getItem('v_snd_muted') === 'true',
+            init() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } this.sync(); },
             sync() { this.isMuted = localStorage.getItem('v_snd_muted') === 'true'; const btn = document.getElementById('mute-btn'); if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊'; if (this.ctx) { if (this.isMuted) this.ctx.suspend(); else this.ctx.resume(); } },
             toggle() { this.init(); this.isMuted = !this.isMuted; localStorage.setItem('v_snd_muted', this.isMuted); this.sync(); this.playTone(600, 'sine', 0.1, 0.05); },
-            playTone(freq, type, dur, vol) { if (!this.ctx || this.isMuted) return; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime); gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + dur); },
-            startBGM() { if (this.bgmInterval) return; let step = 0; const melody = [110, 0, 146, 110, 164, 0, 110, 98]; this.bgmInterval = setInterval(() => { const freq = melody[step % melody.length]; if (freq > 0 && gameActive && this.ctx && !this.isMuted) this.playTone(freq, 'sine', 0.8, 0.01); step++; }, 600); }
+            playTone(freq, type, dur, vol) { if (!this.ctx || this.isMuted) return; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime); gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + dur); }
         };
 
         const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const scoreEl = document.getElementById('scoreVal'); const nextEl = document.getElementById('nextEmoji'); const RANK_KEY = 'fruitRanking'; 
@@ -142,14 +141,14 @@
         }
 
         function handleMove(e) { if (!gameActive || isDropping) return; AudioEngine.init(); const rect = canvas.getBoundingClientRect(); const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX; currentX = (clientX - rect.left) * (W / rect.width); const r = fruitTypes[currentType].r; currentX = Math.max(r, Math.min(W - r, currentX)); }
-        function handleRelease() { if (isDropping || !gameActive) return; AudioEngine.init(); isDropping = true; AudioEngine.playTone(400, 'sine', 0.1, 0.05); spawn(currentX, 40, currentType); setTimeout(() => { currentType = nextType; nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; isDropping = false; }, 600); }
+        function handleRelease() { if (isDropping || !gameActive) return; AudioEngine.init(); isDropping = true; AudioEngine.playTone(400, 'sine', 0.1, 0.05); spawn(currentX, 40, currentType); setTimeout(() => { currentType = nextType; nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; isDropping = false; }, 400); }
         canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mousedown', handleMove); canvas.addEventListener('mouseup', handleRelease);
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); AudioEngine.init(); handleMove(e); });
         canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); });
         canvas.addEventListener('touchend', (e) => { e.preventDefault(); handleRelease(); });
 
         function update() {
-            if (!gameActive) return; const now = Date.now(); const subSteps = 10; const gravity = 0.3 / subSteps; let exceeded = false;
+            if (!gameActive) return; const now = Date.now(); const subSteps = 10; const gravity = 0.4 / subSteps; let exceeded = false;
             
             particles.forEach((p, idx) => {
                 p.x += p.vx; p.y += p.vy; p.life -= 0.02;
@@ -227,6 +226,7 @@
         function closeRanking() { AudioEngine.init(); document.getElementById('ranking-modal').style.display = 'none'; }
         AudioEngine.sync(); window.addEventListener('storage', (e) => { if (e.key === 'v_snd_muted') AudioEngine.sync(); });
         init(); gameLoop();
+
         console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", "color: #ff71ce; font-size: 20px; font-weight: bold;", "color: #01cdfe; font-size: 14px;");
     </script>
 </body>
