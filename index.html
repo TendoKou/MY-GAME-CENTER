@@ -277,6 +277,7 @@
 </head>
 
 <body>
+
     <div class="statue-bg">🗿</div>
     <div class="deco-text">美学 ＡＥＳＴＨＥＴＩＣＳ</div>
 
@@ -352,7 +353,6 @@ const AudioEngine = {
         this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
         this.updateButton();
         if (this.ctx && this.masterGain) {
-
             this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
         }
     },
@@ -458,10 +458,9 @@ const unlockAudio = () => {
 window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 
-
 console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
             "color: #ff71ce; font-size: 20px; font-weight: bold;", 
-            "color: #01cdfe; font-size: 14px;");</script>
+            "color: #01cdfe; font-size: 14px;");
 </script>
 </body>
 </html>
