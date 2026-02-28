@@ -122,25 +122,22 @@
             ctx: null, 
             isMuted: localStorage.getItem('v_snd_muted') === 'true',
             init() { 
-                if(!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
+                if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 if(this.ctx.state === 'suspended') this.ctx.resume();
             },
             updateIcons() {
                 const icon = this.isMuted ? '🔇' : '🔊';
-                const el1 = document.getElementById('sound-toggle');
-                const el2 = document.getElementById('overlay-sound-toggle');
-                if(el1) el1.innerText = icon;
-                if(el2) el2.innerText = icon;
+                ['sound-toggle', 'overlay-sound-toggle'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerText = icon;
+                });
             },
             toggleMute() { 
                 this.init();
                 this.isMuted = !this.isMuted; 
                 localStorage.setItem('v_snd_muted', this.isMuted); 
                 this.updateIcons();
-
-                if(!this.isMuted) this.play(440, 'sine', 0.1, 0.05);
+                if(!this.isMuted) this.play(440, 'sine', 0.05, 0.005);
             },
             play(f, t, d, v) { 
                 if(this.isMuted) return; 
@@ -148,13 +145,30 @@
                 const o = this.ctx.createOscillator(), g = this.ctx.createGain(); 
                 o.type = t; 
                 o.frequency.setValueAtTime(f, this.ctx.currentTime); 
-                g.gain.setValueAtTime(v, this.ctx.currentTime); 
-
-                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + d); 
+                
+                const softVol = v * 0.1;
+                g.gain.setValueAtTime(0, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(softVol, this.ctx.currentTime + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + d); 
+                
                 o.connect(g); g.connect(this.ctx.destination); 
                 o.start(); o.stop(this.ctx.currentTime + d); 
             }
         };
+
+        function startGame(mode) { 
+            gameMode = mode; 
+            document.getElementById('overlay').style.display = 'none'; 
+            AudioEngine.play(523, 'sine', 0.05, 0.01); 
+            init(); 
+        }
+
+        function startGame(mode) { 
+            gameMode = mode; 
+            document.getElementById('overlay').style.display = 'none'; 
+            AudioEngine.play(660, 'sine', 0.08, 0.02); 
+            init(); 
+        }
 
         AudioEngine.updateIcons();
 
@@ -165,21 +179,8 @@
 
         function startGame(mode) { 
             gameMode=mode; document.getElementById('overlay').style.display='none'; 
-            AudioEngine.play(880, 'sine', 0.2, 0.1); 
+            AudioEngine.play(880, 'sine', 0.2, 0.05); 
             init(); 
-        }
-
-        function spawnParticle(x, y, color) {
-            for(let i=0; i<8; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = x + 'px'; p.style.top = y + 'px';
-                p.style.backgroundColor = color;
-                p.style.setProperty('--tx', (Math.random()-0.5)*120 + 'px');
-                p.style.setProperty('--ty', (Math.random()-0.5)*120 + 'px');
-                document.getElementById('game-container').appendChild(p);
-                setTimeout(() => p.remove(), 800);
-            }
         }
 
         function init() {
@@ -200,19 +201,6 @@
             resetHintTimer();
         }
 
-        function createJewel(r, c, isNew=false, type=null, special=null) {
-            if(isNew && isFever && Math.random() > 0.95 && !special) special = '💣';
-            let def = type ? DEFS.find(d=>d.t===type) : DEFS[Math.floor(Math.random()*DEFS.length)];
-            const el = document.createElement('div');
-            el.className = 'jewel' + (special ? ' special' : '');
-            el.innerText = special || def.t;
-            el.style.color = special ? '#fff' : def.c;
-            el.style.left = (c*J_W)+'px';
-            el.style.top = isNew ? '-45px' : (r*J_W)+'px';
-            document.getElementById('game-container').appendChild(el);
-            return board[r][c] = { r, c, type: def.t, el, special };
-        }
-
         document.getElementById('game-box').addEventListener('pointerdown', (e) => {
             if(isProcessing) return;
             const rect = document.getElementById('game-container').getBoundingClientRect();
@@ -223,22 +211,7 @@
                 dragStart = board[cy][cx];
                 if(dragStart) {
                     dragStart.el.classList.add('selected');
-                    AudioEngine.play(600, 'sine', 0.05, 0.05);
-                }
-            }
-        });
-
-        window.addEventListener('pointermove', (e) => {
-            if(!dragStart || isProcessing) return;
-            const rect = document.getElementById('game-container').getBoundingClientRect();
-            const cx = Math.floor((e.clientX - rect.left) / J_W);
-            const cy = Math.floor((e.clientY - rect.top) / J_W);
-            if(cx >= 0 && cx < SIZE && cy >= 0 && cy < SIZE && (cx !== dragStart.c || cy !== dragStart.r)) {
-                if(Math.abs(cx - dragStart.c) + Math.abs(cy - dragStart.r) === 1) {
-                    const target = board[cy][cx];
-                    dragStart.el.classList.remove('selected');
-                    const source = dragStart; dragStart = null;
-                    swapJewels(source, target);
+                    AudioEngine.play(600, 'sine', 0.05, 0.02);
                 }
             }
         });
@@ -257,7 +230,7 @@
                 a.r = ar; a.c = ac; b.r = br; b.c = bc;
                 updatePositions();
                 isProcessing = false;
-                AudioEngine.play(200, 'sine', 0.1, 0.05);
+                AudioEngine.play(200, 'sine', 0.1, 0.02);
             }
         }
 
@@ -284,7 +257,7 @@
             if(toRemove.size > 0) {
                 toRemove.forEach(j => { if(board[j.r][j.c]) { spawnParticle(j.c*J_W+20, j.r*J_W+20, j.el.style.color); j.el.remove(); board[j.r][j.c]=null; updateScore(isFever ? 20 : 10); updateFever(1.5); } });
                 specials.forEach(g => { if(!board[g.r][g.c]) createJewel(g.r, g.c, false, g.t, g.s); });
-                AudioEngine.play(800, 'sine', 0.1, 0.03);
+                AudioEngine.play(800, 'sine', 0.1, 0.02);
                 fillGaps();
                 return true;
             }
@@ -297,44 +270,20 @@
             const r=j.r, c=j.c, s=j.special, t=j.type; if(!board[r][c]) return;
             spawnParticle(c*J_W+20, r*J_W+20, '#fff');
             j.el.remove(); board[r][c]=null;
-            AudioEngine.play(400, 'square', 0.15, 0.07);
+            AudioEngine.play(400, 'square', 0.15, 0.03);
             if(s==='↔️') { for(let i=0; i<SIZE; i++) removeAt(r, i); }
             else if(s==='↕️') { for(let i=0; i<SIZE; i++) removeAt(i, c); }
             else if(s==='💣') { for(let i=r-1; i<=r+1; i++) for(let k=c-1; k<=c+1; k++) removeAt(i, k); }
             else if(s==='🌈') { board.flat().forEach(x => { if(x && x.type===t) removeAt(x.r, x.c); }); }
         }
 
-        function removeAt(r, c) {
-            if(r>=0 && r<SIZE && c>=0 && c<SIZE && board[r][c]) {
-                const j=board[r][c];
-                if(j.special) triggerSpecial(j);
-                else { spawnParticle(c*J_W+20, r*J_W+20, j.el.style.color); j.el.remove(); board[r][c]=null; updateScore(15); }
-            }
-        }
-
-        function fillGaps() {
-            for(let c=0; c<SIZE; c++) {
-                let empty=0;
-                for(let r=SIZE-1; r>=0; r--) {
-                    if(!board[r][c]) empty++;
-                    else if(empty>0) { const j=board[r][c]; board[r+empty][c]=j; j.r=r+empty; board[r][c]=null; }
-                }
-                for(let i=0; i<empty; i++) createJewel(empty-1-i, c, true);
-            }
-            updatePositions();
-            setTimeout(() => checkMatches(), 300);
-        }
-
-        function updatePositions() { board.flat().forEach(j => { if(j) { j.el.style.left=(j.c*J_W)+'px'; j.el.style.top=(j.r*J_W)+'px'; } }); }
-        function updateScore(n=0) { score+=n; document.getElementById('score-display').innerText = score.toString().padStart(5, '0'); }
-        
         function updateFever(n) {
             feverGauge=Math.min(100, feverGauge+n); document.getElementById('fever-bar').style.width=feverGauge+'%';
             if(feverGauge>=100 && !isFever) {
                 isFever=true; 
                 document.getElementById('game-box').classList.add('fever-mode');
                 document.body.classList.add('fever-active');
-                AudioEngine.play(1000, 'sine', 0.3, 0.1);
+                AudioEngine.play(1000, 'sine', 0.3, 0.05);
                 let ft=setInterval(() => {
                     feverGauge-=1.5; document.getElementById('fever-bar').style.width=feverGauge+'%';
                     if(feverGauge<=0){ 
@@ -351,13 +300,13 @@
             timeLeft--; document.getElementById('timer-label').innerText = timeLeft+'s';
             if(timeLeft<=10) { 
                 document.getElementById('game-box').classList.add('danger-pulse'); 
-                AudioEngine.play(300, 'sine', 0.05, 0.05); 
+                AudioEngine.play(300, 'sine', 0.05, 0.02); 
             }
             if(timeLeft<=0) endGame();
         }
 
         function handleNoMoves() {
-            AudioEngine.play(200, 'sawtooth', 0.4, 0.05);
+            AudioEngine.play(200, 'sawtooth', 0.4, 0.02);
             updateScore(500); 
             board.flat().forEach(j => { if(j) { spawnParticle(j.c*J_W+20, j.r*J_W+20, '#fff'); j.el.remove(); } });
             board = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
@@ -369,33 +318,8 @@
             }
         }
 
-        function resetHintTimer() { lastHintTimer = Date.now(); }
-        function clearHints() { document.querySelectorAll('.hint-anim').forEach(el => el.classList.remove('hint-anim')); }
-        setInterval(() => { if(isPlaying && !isProcessing && Date.now() - lastHintTimer > 3000) { const m = findMove(); if(m) { m.a.el.classList.add('hint-anim'); m.b.el.classList.add('hint-anim'); } } }, 1000);
-
-        function findMove() {
-            for(let r=0; r<SIZE; r++) for(let c=0; c<SIZE; c++) {
-                if(c<SIZE-1 && checkSimulatedMatch(r, c, r, c+1)) return {a: board[r][c], b: board[r][c+1]};
-                if(r<SIZE-1 && checkSimulatedMatch(r, c, r+1, c)) return {a: board[r][c], b: board[r+1][c]};
-            }
-            return null;
-        }
-
-        function checkSimulatedMatch(r1, c1, r2, c2) {
-            if(!board[r1][c1] || !board[r2][c2]) return false;
-            if(board[r1][c1].special || board[r2][c2].special) return true;
-            const b = board.map(row => row.map(j => ({type: j ? j.type : null})));
-            [b[r1][c1], b[r2][c2]] = [b[r2][c2], b[r1][c1]];
-            for(let r=0; r<SIZE; r++) for(let c=0; c<SIZE; c++) {
-                let t=b[r][c].type; if(!t) continue;
-                if(c<SIZE-2 && b[r][c+1] && b[r][c+2] && t===b[r][c+1].type && t===b[r][c+2].type) return true;
-                if(r<SIZE-2 && b[r+1][c] && b[r+2][c] && t===b[r+1][c].type && t===b[r+2][c].type) return true;
-            }
-            return false;
-        }
-
         function saveAndReset() {
-            AudioEngine.play(440, 'sine', 0.1, 0.05);
+            AudioEngine.play(440, 'sine', 0.1, 0.02);
             const wantsToSave = confirm("スコアを登録しますか？");
             if (wantsToSave) {
                 const name = prompt("名前:", "PLAYER");
@@ -412,7 +336,7 @@
         }
 
         function showRanking() {
-            AudioEngine.play(440, 'sine', 0.1, 0.05);
+            AudioEngine.play(440, 'sine', 0.1, 0.02);
             const list = document.getElementById('ranking-list');
             list.innerHTML = '';
             const ranking = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
@@ -421,15 +345,13 @@
             document.getElementById('ranking-modal').style.display = 'flex';
         }
 
-        function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
-        
         function titleAction() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.05); 
+            AudioEngine.play(440, 'sine', 0.1, 0.02); 
             if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); 
         }
         
         function backToMenu() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.05);
+            AudioEngine.play(440, 'sine', 0.1, 0.02);
             if(confirm("ゲームを終了してメインページに戻りますか？")) { 
                 if (window.history.length > 1) window.history.back(); 
                 else location.href = '../index.html'; 
@@ -438,7 +360,7 @@
 
         function endGame() { 
             isPlaying=false; clearInterval(timerInterval); 
-            AudioEngine.play(100, 'sawtooth', 0.8, 0.1);
+            AudioEngine.play(100, 'sawtooth', 0.8, 0.05);
             alert("TIME UP! SCORE: " + score); 
             saveAndReset(); 
         }
