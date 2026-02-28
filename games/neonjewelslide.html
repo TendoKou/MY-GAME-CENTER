@@ -424,6 +424,24 @@
             saveAndReset(); 
         }
 
+function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+
+function backToMenu() {
+    if(confirm("ゲームを終了してメインページに戻りますか？")) {
+        window.location.href = '../index.html';
+    }
+}
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') Snd.sync();
+});
+
+window.addEventListener('pageshow', () => {
+    Snd.sync();
+});
+
+init();
+
 console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
             "color: #ff71ce; font-size: 20px; font-weight: bold;", 
             "color: #01cdfe; font-size: 14px;");</script>

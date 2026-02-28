@@ -154,7 +154,8 @@ const Snd = {
     },
     sync() {
         this.muted = localStorage.getItem('v_snd_muted') === 'true';
-        document.getElementById('sound-toggle').innerText = this.muted ? '🔇' : '🔊';
+        const el = document.getElementById('sound-toggle');
+        if(el) el.innerText = this.muted ? '🔇' : '🔊';
         if (this.ctx) {
             this.muted ? this.ctx.suspend() : this.ctx.resume();
         }
@@ -181,9 +182,9 @@ const Snd = {
     }
 };
 
-function backToMenu() {
-    if(confirm("ゲームを終了してメインページに戻りますか？")) {
-        if (window.history.length > 1) window.history.back(); else location.href = '../index.html';
+function backToTitle() {
+    if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) {
+        location.reload();
     }
 }
 
@@ -191,7 +192,7 @@ function init() {
     state = layout.map(r => [...r]);
     selected = null; firstHoleMade = false; score = 33;
     document.getElementById('guide').innerText = "最初に、穴をあける場所を選んでください";
-    document.getElementById('sound-toggle').innerText = Snd.muted ? '🔇' : '🔊';
+    Snd.sync();
     render();
 }
 
@@ -292,7 +293,14 @@ function showRanking() {
     list.innerHTML = r.length ? r.map((d,i)=>`<li style="margin:10px 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size:12px;">#${i+1} ${d.name} <span style="float:right; color:var(--v-blue);">${d.score}</span></li>`).join('') : '<li>NO DATA</li>';
     document.getElementById('ranking-modal').style.display = 'flex';
 }
+
 function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+
+function backToMenu() {
+    if(confirm("ゲームを終了してメインページに戻りますか？")) {
+        window.location.href = '../index.html';
+    }
+}
 
 window.addEventListener('storage', (e) => {
     if (e.key === 'v_snd_muted') Snd.sync();
@@ -306,6 +314,7 @@ init();
 
 console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
             "color: #ff71ce; font-size: 20px; font-weight: bold;", 
-            "color: #01cdfe; font-size: 14px;");</script>
+            "color: #01cdfe; font-size: 14px;");
+</script>
 </body>
 </html>

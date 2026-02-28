@@ -12,10 +12,9 @@
         body {
             background-color: var(--bg-dark); color: #ccc; font-family: sans-serif;
             display: flex; flex-direction: column; align-items: center; 
-            /* 修正：上寄せから中央寄せに変更 */
             justify-content: center; 
             margin: 0; padding: 0; 
-            /* 修正：スマホの高さ制限をより柔軟に */
+
             min-height: 100dvh; width: 100vw; overflow: hidden; touch-action: manipulation;
         }
         .bg-lines {
@@ -28,7 +27,7 @@
         
         .header-container { 
             display: flex; align-items: center; justify-content: center; 
-            /* 修正：上下の余白を調整 */
+
             padding: 10px 0; width: 100%; gap: 15px; 
         }
         h1 { font-size: clamp(18px, 4.5vw, 24px); color: var(--v-pink); text-shadow: 0 0 10px var(--v-pink); margin: 0; font-style: italic; letter-spacing: 2px; }
@@ -56,7 +55,7 @@
         .start-btn { background: linear-gradient(45deg, var(--v-pink), var(--v-purple)); color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px var(--v-pink); }
         
         #dice-view { font-size: 28px; font-weight: bold; color: var(--v-yellow); margin: 5px; height: 32px; text-shadow: 0 0 10px var(--v-yellow); }
-        /* 修正：コントロールパネルが最下部に張り付かないよう調整 */
+
         .control-panel { display: flex; gap: 6px; width: min(95vw, 420px); margin-top: 10px; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box; }
         
         #ranking-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; }
@@ -196,7 +195,7 @@ function setPlayerType(idx, type) {
 
 function backToMenu() {
     if(confirm("ゲームを終了してメインページに戻りますか？")) {
-        if (window.history.length > 1) window.history.back(); else location.href = '../index.html';
+        window.location.href = '../index.html';
     }
 }
 

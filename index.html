@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:title" content="MY GAME CENTER">
+    <meta property="og:description" content="ミニゲーム倉庫">
+    <meta property="og:image" content="https://tendokou.github.io/MY-GAME-CENTER/MY-GAME-CENTER.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tendokou.github.io/MY-GAME-CENTER/">
+
     <title>MY GAME CENTER</title>
     
     <link rel="manifest" href="manifest.json">
@@ -98,6 +106,18 @@
             margin: 0;
             letter-spacing: 10px;
             text-align: center;
+            transition: transform 0.1s;
+        }
+
+        h1:hover {
+            animation: mini-glitch 0.3s steps(2) infinite;
+            cursor: default;
+        }
+
+        @keyframes mini-glitch {
+            0% { transform: translate(2px, 0); filter: drop-shadow(-2px 2px 0 var(--v-cyan)); }
+            50% { transform: translate(-2px, 0); filter: drop-shadow(2px -2px 0 var(--v-pink)); }
+            100% { transform: translate(0, 0); }
         }
 
         .subtitle-container {
@@ -105,40 +125,21 @@
             margin-bottom: 50px;
             z-index: 10;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .subtitle {
-            font-size: 22px;
-            color: var(--v-cyan);
-            text-shadow: 2px 2px var(--bg-dark), 0 0 10px var(--v-cyan);
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(to right, var(--v-pink), var(--v-yellow), var(--v-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
             margin-bottom: 15px;
             display: inline-block;
         }
-
-.subtitle {
-    font-size: 24px;
-    font-weight: bold;
-    background: linear-gradient(to right, var(--v-pink), var(--v-yellow), var(--v-cyan));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
-    margin-bottom: 15px;
-    display: inline-block;
-}
-
-@keyframes glitch {
-    0% { transform: translate(0); }
-    20% { transform: translate(-1px, 1px); }
-    40% { transform: translate(-1px, -1px); }
-    60% { transform: translate(1px, 1px); }
-    80% { transform: translate(1px, -1px); }
-    100% { transform: translate(0); }
-}
-
-@keyframes blur-blink {
-    0%, 100% { filter: blur(0px) brightness(1); }
-    50% { filter: blur(1px) brightness(1.2); }
-}
 
         .disclaimer {
             font-size: clamp(11px, 3vw, 13px);
@@ -147,7 +148,36 @@
             letter-spacing: 0.05em;
             text-align: center;
             max-width: 500px;
-            margin: 0 auto;
+            margin: 0 auto 30px auto;
+        }
+
+        .about-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 40px auto;
+            z-index: 10;
+        }
+
+        .about-card {
+            aspect-ratio: auto !important;
+            height: 60px !important;
+            border-radius: 30px !important;
+            flex-direction: row !important;
+            padding: 0 20px !important;
+        }
+
+        .about-card .icon {
+            font-size: 24px !important;
+            margin-bottom: 0 !important;
+            margin-right: 10px;
+        }
+
+        .about-card .title {
+            text-align: left !important;
+            font-size: 10px !important;
         }
 
         .menu-grid {
@@ -156,6 +186,7 @@
             gap: clamp(10px, 3vw, 20px); 
             width: 100%;
             max-width: 600px;
+            margin: 0 auto;
             z-index: 10;
         }
 
@@ -190,9 +221,7 @@
             transition: transform 0.3s ease;
         }
 
-        .game-card:hover .icon {
-            transform: scale(1.1);
-        }
+        .game-card:hover .icon { transform: scale(1.1); }
 
         .title { 
            font-weight: 900; 
@@ -200,19 +229,10 @@
            text-align: center;
            padding: 0 4px;
            line-height: 1.2;
-color: #000000;
-    letter-spacing: 0.05em;
-    word-break: keep-all;
-    text-shadow: 
-        1px  1px 0 #fff,
-       -1px  1px 0 #fff,
-        1px -1px 0 #fff,
-       -1px -1px 0 #fff,
-        0px  1px 0 #fff,
-        0px -1px 0 #fff,
-        1px  0px 0 #fff,
-       -1px  0px 0 #fff;
-
+           color: #000000;
+           letter-spacing: 0.05em;
+           word-break: keep-all;
+           text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 0px 1px 0 #fff, 0px -1px 0 #fff, 1px 0px 0 #fff, -1px 0px 0 #fff;
         }
 
         .deco-text {
@@ -226,56 +246,33 @@ color: #000000;
             writing-mode: vertical-rl;
         }
 
-.title small {
-    display: block; 
-    margin-top: 5px;
-color: #000000;
-    letter-spacing: 0.05em;
-    word-break: keep-all;
-    text-shadow: 
-        1px  1px 0 #fff,
-       -1px  1px 0 #fff,
-        1px -1px 0 #fff,
-       -1px -1px 0 #fff,
-        0px  1px 0 #fff,
-        0px -1px 0 #fff,
-        1px  0px 0 #fff,
-       -1px  0px 0 #fff;
+        .title small { display: block; margin-top: 5px; color: #000000; }
 
-       }
+        .header-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            z-index: 100;
+        }
 
-.header-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-    z-index: 100;
-}
+        #sound-toggle {
+            position: absolute;
+            top: -10px;
+            right: -20px;
+            cursor: pointer;
+            font-size: clamp(20px, 5vw, 28px);
+            filter: drop-shadow(0 0 8px var(--v-cyan));
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
 
-#sound-toggle {
+        #sound-toggle:active { transform: scale(0.9); }
 
-    position: absolute;
-    top: -10px;
-    right: -20px;
-    cursor: pointer;
-    font-size: clamp(20px, 5vw, 28px);
-    filter: drop-shadow(0 0 8px var(--v-cyan));
-    transition: transform 0.2s ease;
-    user-select: none;
-}
-
-#sound-toggle:active {
-    transform: scale(0.9);
-}
-
-@media (max-width: 480px) {
-    #sound-toggle {
-        top: -20px;
-        right: 0px;
-    }
-}
-
+        @media (max-width: 480px) {
+            #sound-toggle { top: -20px; right: 0px; }
+        }
     </style>
 </head>
 
@@ -290,59 +287,63 @@ color: #000000;
     
     <div class="subtitle-container">
         <div class="subtitle">～ ようこそ ～</div>
-        <div class="disclaimer">
-            当サイトの制作にはGeminiを使用しております。<br>
-            <br>
-            環境による動作不良や、未修正の不具合が存在する場合がございます。<br> 
-            都度更新予定です。あらかじめご了承ください。<br>
-            <br> 
-            PWAに対応しているため、「ホーム画面に追加」から追加していただくと<br>オフライン環境での利用ができるかと思います。<br> 
-            <br> 
-            趣味で作ったものですが、よければ遊んでみてください。
-        </div>
-    </div>
+        <div class="disclaimer">当サイトの制作にはGeminiを使用しております。</div>
 
-   <div class="menu-grid">
-        <a href="games/minesearcher.html" class="game-card">
-            <div class="icon">💣</div>
-            <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
-        </a>
-        <a href="games/pegjump.html" class="game-card">
-            <div class="icon">🟢</div>
-            <div class="title">ＰＥＧ ＪＵＭＰ<br><small>ペグ・ジャンプ</small></div>
-        </a>
-        <a href="games/snakesandladders.html" class="game-card">
-            <div class="icon">🐍🪜</div>
-            <div class="title">ＳＮＡＫＥＳ<br>＆<br>ＬＡＤＤＥＲＳ<br><small>蛇と梯子</small></div>
-        </a>
-        <a href="games/fruitbounceharvest.html" class="game-card">
-            <div class="icon">🍎</div>
-            <div class="title">ＦＲＵＩＴ ＢＯＵＮＣＥ<br><small>ＨＡＲＶＥＳＴ<br>フルーツ・バウンス・ハーベスト</small></div>
-        </a>
-        <a href="games/neonblockpuzzle.html" class="game-card">
-            <div class="icon">🧩</div>
-            <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰＵＺＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
-        </a>
-        <a href="games/neonjewelslide.html" class="game-card">
-            <div class="icon">💎</div>
-            <div class="title">ＮＥＯＮ ＪＥＷＥＬ ＳＬＩＤＥ<br><small>ネオン・ジュエル・スライド</small></div>
-        </a>
-        <div class="game-card">
-            <div class="icon">❓</div>
-            <div class="title">Ｃｏｍｉｎｇ Ｓｏｏｎ...<br><small>準備中</small></div>
+        <div class="about-row">
+            <a href="about/aboutsite.html" class="game-card about-card" style="border-color: var(--v-cyan);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-cyan));">🌐</div>
+                <div class="title">ＡＢＯＵＴ　<br>ＴＨＩＳ　ＳＩＴＥ<br><small>このサイトについて</small></div>
+            </a>
+            <a href="about/aboutgames.html" class="game-card about-card" style="border-color: var(--v-pink);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-pink));">📖</div>
+                <div class="title">ＧＡＭＥＳ　<br>ＤＥＳＣＲＩＰＴＩＯＮＳ <br><small>ゲームについて</small></div>
+            </a>
+        </div>
+
+        <div class="menu-grid">
+            <a href="games/minesearcher.html" class="game-card">
+                <div class="icon">💣</div>
+                <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
+            </a>
+            <a href="games/pegjump.html" class="game-card">
+                <div class="icon">🟢</div>
+                <div class="title">ＰＥＧ ＪＵＭＰ<br><small>ペグ・ジャンプ</small></div>
+            </a>
+            <a href="games/snakesandladders.html" class="game-card">
+                <div class="icon">🐍🪜</div>
+                <div class="title">ＳＮＡＫＥＳ<br>＆<br>ＬＡＤＤＥＲＳ<br><small>蛇と梯子</small></div>
+            </a>
+            <a href="games/fruitbounceharvest.html" class="game-card">
+                <div class="icon">🍎</div>
+                <div class="title">ＦＲＵＩＴ ＢＯＵＮＣＥ<br><small>ＨＡＲＶＥＳＴ<br>フルーツ・バウンス・ハーベスト</small></div>
+            </a>
+            <a href="games/neonblockpuzzle.html" class="game-card">
+                <div class="icon">🧩</div>
+                <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰＵＺＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
+            </a>
+            <a href="games/neonjewelslide.html" class="game-card">
+                <div class="icon">💎</div>
+                <div class="title">ＮＥＯＮ ＪＥＷＥＬ ＳＬＩＤＥ<br><small>ネオン・ジュエル・スライド</small></div>
+            </a>
+            <div class="game-card">
+                <div class="icon">❓</div>
+                <div class="title">Ｃｏｍｉｎｇ Ｓｏｏｎ...<br><small>準備中</small></div>
+            </div>
         </div>
     </div>
 
 <script>
 const AudioEngine = {
     ctx: null,
-
+    masterGain: null,
     isMuted: localStorage.getItem('v_snd_muted') === 'true',
     isBGMPlaying: false,
     
     init() {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.connect(this.ctx.destination);
         }
         this.syncMuteState();
     },
@@ -350,12 +351,9 @@ const AudioEngine = {
     syncMuteState() {
         this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
         this.updateButton();
-        if (this.ctx) {
-            if (this.isMuted) {
-                if (this.ctx.state !== 'suspended') this.ctx.suspend();
-            } else {
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-            }
+        if (this.ctx && this.masterGain) {
+
+            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
         }
     },
 
@@ -371,14 +369,15 @@ const AudioEngine = {
     },
 
     playHover() {
-        if (this.isMuted || !this.ctx || this.ctx.state === 'suspended') return;
+        if (!this.ctx || this.isMuted) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(880, this.ctx.currentTime);
         gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.connect(gain); 
+        gain.connect(this.masterGain);
         osc.start(); osc.stop(this.ctx.currentTime + 0.1);
     },
 
@@ -394,7 +393,8 @@ const AudioEngine = {
         osc.frequency.setValueAtTime(440, this.ctx.currentTime);
         gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
-        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.connect(gain); 
+        gain.connect(this.masterGain);
         osc.start(); osc.stop(this.ctx.currentTime + 0.2);
         setTimeout(callback, 200);
     },
@@ -407,8 +407,7 @@ const AudioEngine = {
         const melody = [110, 0, 146, 110, 164, 0, 110, 98];
         
         setInterval(() => {
-            if (this.isMuted || !this.ctx) return;
-            if (this.ctx.state === 'suspended') return;
+            if (!this.ctx || this.isMuted) return;
 
             const freq = melody[step % melody.length];
             if (freq > 0) {
@@ -419,7 +418,8 @@ const AudioEngine = {
                 osc.frequency.setValueAtTime(freq, now);
                 gain.gain.setValueAtTime(0.05, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.connect(gain); 
+                gain.connect(this.masterGain);
                 osc.start(); osc.stop(now + 0.8);
             }
             step++;
@@ -428,33 +428,23 @@ const AudioEngine = {
 };
 
 window.addEventListener('storage', (e) => {
-    if (e.key === 'v_snd_muted') {
-        AudioEngine.syncMuteState();
-    }
+    if (e.key === 'v_snd_muted') AudioEngine.syncMuteState();
 });
 
-window.addEventListener('pageshow', (event) => {
-    AudioEngine.syncMuteState();
-});
 document.addEventListener('DOMContentLoaded', () => {
     AudioEngine.updateButton();
-
     document.getElementById('sound-toggle').addEventListener('click', (e) => {
         e.stopPropagation();
         AudioEngine.init();
         AudioEngine.toggleMute();
     });
-
     document.querySelectorAll('.game-card').forEach(card => {
         card.addEventListener('mouseenter', () => AudioEngine.playHover());
-        card.addEventListener('touchstart', () => AudioEngine.init(), {passive: true});
         card.addEventListener('click', (e) => {
             const url = card.getAttribute('href');
             if (!url) return;
             e.preventDefault();
-            AudioEngine.playClick(() => {
-                window.location.href = url;
-            });
+            AudioEngine.playClick(() => { window.location.href = url; });
         });
     });
 });
@@ -468,9 +458,10 @@ const unlockAudio = () => {
 window.addEventListener('click', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 
+
 console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
             "color: #ff71ce; font-size: 20px; font-weight: bold;", 
-            "color: #01cdfe; font-size: 14px;");
+            "color: #01cdfe; font-size: 14px;");</script>
 </script>
 </body>
 </html>
