@@ -20,16 +20,6 @@
     <link rel="apple-touch-icon" href="OURGAMES.png">
     <link rel="icon" type="image/png" href="OURGAMES.png">
 
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('オフライン機能準備完了！'))
-            .catch(err => console.log('準備失敗', err));
-        });
-      }
-    </script>
-
     <style>
         :root {
             --v-pink: #ff71ce;
@@ -37,6 +27,7 @@
             --v-purple: #b967ff;
             --v-cyan: #05ffa1;
             --v-yellow: #fffb96;
+            --v-orange: #ff9d00;
             --bg-dark: #241734;
         }
 
@@ -215,6 +206,17 @@
                 0 0 20px rgba(255, 113, 206, 0.2);
         }
 
+        .game-card.flash-active {
+            animation: neon-slow-fade 1.5s ease-in-out infinite;
+            z-index: 100;
+        }
+
+        @keyframes neon-slow-fade {
+            0% { border-color: var(--v-cyan); box-shadow: 0 0 20px var(--v-cyan); }
+            50% { border-color: var(--v-pink); box-shadow: 0 0 30px var(--v-pink); }
+            100% { border-color: var(--v-cyan); box-shadow: 0 0 20px var(--v-cyan); }
+        }
+
         .icon { 
             font-size: clamp(24px, 7vw, 45px); 
             margin-bottom: 8px;
@@ -288,11 +290,18 @@
             backdrop-filter: blur(15px);
         }
 
-        #draw-canvas {
-            background: #000;
+        #canvas-container {
+            position: relative;
+            background: #000000;
             border: 4px solid var(--v-purple);
             box-shadow: 0 0 20px rgba(185, 103, 255, 0.5);
             border-radius: 20px;
+            overflow: hidden;
+            line-height: 0; 
+        }
+
+        #draw-canvas {
+            background: transparent;
             touch-action: none;
             max-width: 95vw;
             max-height: 55vh;
@@ -315,15 +324,25 @@
             align-items: center;
         }
 
+        .left-handed .control-group {
+            flex-direction: row-reverse;
+        }
+
         .color-btn {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid #fff;
             cursor: pointer;
             transition: 0.2s;
         }
         .color-btn.active { transform: scale(1.25); box-shadow: 0 0 10px #fff; }
+
+        .color-btn.bg-trans {
+            background-image: linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px 5px, 5px 0;
+        }
 
         .tool-btn {
             padding: 6px 10px;
@@ -339,6 +358,7 @@
         .draw-action-btns {
             display: flex;
             gap: 10px;
+            width: 100%;
         }
 
         .draw-btn {
@@ -358,8 +378,15 @@
         .draw-btn:active { transform: scale(0.95); }
         
         .size-slider {
-            width: 100px;
+            width: 80px;
             accent-color: var(--v-cyan);
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            font-size: 20px;
+            margin-left: 10px;
+            filter: drop-shadow(0 0 5px var(--v-purple));
         }
 
         ruby rt { font-size: 0.6em; }
@@ -398,7 +425,6 @@
                 <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-purple));">🎨</div>
                 <div class="title">ＮＥＯＮ ＤＲＡＷ<br><small>ネオン・ドロー（お絵描き）</small></div>
             </div>
-            </a>
             <a href="games/minesearcher.html" class="game-card">
                 <div class="icon">💣</div>
                 <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
@@ -417,7 +443,7 @@
             </a>
             <a href="games/neonblockpuzzle.html" class="game-card">
                 <div class="icon">🧩</div>
-                <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰＵＺＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
+                <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰUZＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
             </a>
             <a href="games/neonjewelslide.html" class="game-card">
                 <div class="icon">💎</div>
@@ -431,161 +457,235 @@
     </div>
 
     <div id="draw-modal">
-        <h2 style="color:var(--v-purple); margin-bottom:10px; text-shadow:0 0 10px var(--v-purple); font-size: 1.2rem;">ネオン・ドロー
-        </h2>
+        <div style="display:flex; align-items:center; margin-bottom:10px;">
+            <h2 style="color:var(--v-purple); text-shadow:0 0 10px var(--v-purple); font-size: 1.2rem; margin:0;">ネオン・ドロー</h2>
+            <span class="settings-icon" onclick="toggleHandedness()" title="左利き/右利き切替">🔄</span>
+        </div>
         
-        <canvas id="draw-canvas"></canvas>
+        <div id="canvas-container">
+            <canvas id="draw-canvas"></canvas>
+        </div>
         
-        <div class="draw-controls">
+        <div class="draw-controls" id="controls-wrapper">
             <div class="control-group">
-                <div class="color-btn active" style="background: var(--v-cyan);" onclick="setNeonColor('#05ffa1', this)"></div>
-                <div class="color-btn" style="background: var(--v-pink);" onclick="setNeonColor('#ff71ce', this)"></div>
-                <div class="color-btn" style="background: var(--v-blue);" onclick="setNeonColor('#01cdfe', this)"></div>
-                <div class="color-btn" style="background: var(--v-yellow);" onclick="setNeonColor('#fffb96', this)"></div>
-                <div class="color-btn" style="background: #ffffff;" onclick="setNeonColor('#ffffff', this)"></div>
-                <input type="range" class="size-slider" min="1" max="20" value="5" oninput="setLineWidth(this.value)">
+                <div id="bg-controls" style="display:flex; gap:8px; align-items:center; border-right:1px solid rgba(255,255,255,0.2); padding-right:10px;">
+                    <span style="font-size:10px; color:var(--v-pink);">はいけい</span>
+                    <div class="color-btn active" style="background: #000000; border-color:var(--v-purple);" onclick="setCanvasBg('#000000', this)"></div>
+                    <div class="color-btn" style="background: #ffffff; border-color:var(--v-purple);" onclick="setCanvasBg('#ffffff', this)"></div>
+                    <div class="color-btn bg-trans" style="border-color:var(--v-purple);" onclick="setCanvasBg('transparent', this)"></div>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span style="font-size:10px; color:var(--v-cyan);">いろ</span>
+                    <div class="color-btn active" style="background: var(--v-cyan);" onclick="setNeonColor('#05ffa1', this)"></div>
+                    <div class="color-btn" style="background: var(--v-pink);" onclick="setNeonColor('#ff71ce', this)"></div>
+                    <div class="color-btn" style="background: var(--v-blue);" onclick="setNeonColor('#01cdfe', this)"></div>
+                    <div class="color-btn" style="background: #ffffff;" onclick="setNeonColor('#ffffff', this)"></div>
+                    <div class="color-btn" style="background: #000000;" onclick="setNeonColor('#000000', this)"></div>
+                    <input type="range" class="size-slider" min="1" max="40" value="5" oninput="setLineWidth(this.value)">
+                </div>
             </div>
 
             <div class="control-group">
                 <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">✏️ <ruby>自由<rt>じゆう</rt></ruby></button>
+                <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">🧼 <ruby>消<rt>け</rt></ruby>しゴム</button>
                 <button class="tool-btn" id="tool-rect" onclick="setTool('rect')">□ <ruby>四角<rt>しかく</rt></ruby></button>
                 <button class="tool-btn" id="tool-circle" onclick="setTool('circle')">○ <ruby>丸<rt>まる</rt></ruby></button>
-                <button class="tool-btn" onclick="undo()">↩️ <ruby>戻<rt>もど</rt></ruby>る</button>
+                <button class="tool-btn" onclick="undo()">↩️</button>
+                <button class="tool-btn" onclick="redo()">↪️</button>
             </div>
 
             <div class="draw-action-btns">
+                <button class="draw-btn" style="border-color:var(--v-cyan); color:var(--v-cyan);" onclick="saveAsImage()">
+                    💾 <ruby>保存<rt>ほぞん</rt></ruby>
+                </button>
                 <button class="draw-btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="clearCanvas()">
-                    <ruby>全部消<rt>ぜんぶけ</rt></ruby>す
+                    🗑️ <ruby>消去<rt>しょうきょ</rt></ruby>
                 </button>
                 <button class="draw-btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="closeDraw()">
-                    <ruby>終<rt>お</rt></ruby>わる
+                    ❌ <ruby>閉<rt>と</rt></ruby>じる
                 </button>
             </div>
         </div>
     </div>
 
 <script>
-
 const AudioEngine = {
     ctx: null,
     masterGain: null,
     isMuted: localStorage.getItem('v_snd_muted') === 'true',
     isBGMPlaying: false,
     
-    init() {
+    async init() {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             this.masterGain = this.ctx.createGain();
             this.masterGain.connect(this.ctx.destination);
         }
+        if (this.ctx.state === 'suspended') {
+            await this.ctx.resume();
+        }
         this.syncMuteState();
     },
+
     syncMuteState() {
+        if (!this.masterGain) return;
         this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
         this.updateButton();
-        if (this.ctx && this.masterGain) {
-            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
-        }
+        this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : 0.15, this.ctx.currentTime, 0.1);
     },
+
     updateButton() {
         const btn = document.getElementById('sound-toggle');
         if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊';
     },
+
     toggleMute() {
         this.isMuted = !this.isMuted;
         localStorage.setItem('v_snd_muted', this.isMuted);
         this.syncMuteState();
     },
+
     playHover() {
-        if (!this.ctx || this.isMuted) return;
+        if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
         osc.connect(gain); 
         gain.connect(this.masterGain);
-        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+        osc.start(); 
+        osc.stop(this.ctx.currentTime + 0.1);
     },
+
     playClick(callback) {
-        this.init();
-        if (this.isMuted) {
-            if(callback) setTimeout(callback, 200);
-            return;
-        }
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
-        osc.connect(gain); 
-        gain.connect(this.masterGain);
-        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-        if(callback) setTimeout(callback, 200);
+        this.init().then(() => {
+            if (this.isMuted) {
+                if(callback) callback();
+                return;
+            }
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+            osc.connect(gain); 
+            gain.connect(this.masterGain);
+            osc.start(); 
+            osc.stop(this.ctx.currentTime + 0.2);
+            if(callback) setTimeout(callback, 250);
+        });
     },
+
     startBGM() {
         if (this.isBGMPlaying) return;
-        this.init();
         this.isBGMPlaying = true;
         let step = 0;
-        const melody = [110, 0, 146, 110, 164, 0, 110, 98];
-        setInterval(() => {
-            if (!this.ctx || this.isMuted) return;
-            const freq = melody[step % melody.length];
-            if (freq > 0) {
+        const melody = [523, 587, 659, 783, 880, 783, 659, 587]; 
+        const playStep = () => {
+            if (!this.isMuted && this.ctx && this.ctx.state === 'running') {
+                const freq = melody[step % melody.length];
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, now);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.03, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
                 osc.connect(gain); 
                 gain.connect(this.masterGain);
-                osc.start(); osc.stop(now + 0.8);
+                osc.start(); 
+                osc.stop(now + 0.5);
+                step++;
             }
-            step++;
-        }, 600);
+            setTimeout(playStep, 400);
+        };
+        playStep();
     }
 };
 
 const canvas = document.getElementById('draw-canvas');
+const container = document.getElementById('canvas-container');
 const ctx = canvas.getContext('2d');
 let isDrawing = false;
 let startX, startY;
 let snapshot;
 let undoStack = [];
+let redoStack = [];
 
 let currentSettings = {
     color: '#05ffa1',
+    bgColor: '#000000',
     tool: 'pen',
     lineWidth: 5
 };
 
 function resizeCanvas() {
     const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.55);
+    const tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
     canvas.width = size;
     canvas.height = size;
+    ctx.putImageData(tempImage, 0, 0);
     applyDrawingStyles();
-    saveState();
 }
 
 function applyDrawingStyles() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.lineWidth = currentSettings.lineWidth;
-    ctx.strokeStyle = currentSettings.color;
-    ctx.shadowBlur = currentSettings.lineWidth * 2;
-    ctx.shadowColor = currentSettings.color;
+
+    if (currentSettings.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentSettings.color;
+        if (currentSettings.color === '#000000') {
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+        } else {
+            ctx.shadowBlur = currentSettings.lineWidth * 2;
+            ctx.shadowColor = currentSettings.color;
+        }
+    }
 }
 
 function setNeonColor(color, el) {
     currentSettings.color = color;
-    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+    if (currentSettings.tool === 'eraser') setTool('pen');
+
+    el.closest('.control-group').querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     applyDrawingStyles();
+}
+
+function setCanvasBg(color, el) {
+    AudioEngine.playClick();
+    currentSettings.bgColor = color;
+    container.style.background = color;
+    if (color === 'transparent') {
+        container.classList.add('bg-trans');
+    } else {
+        container.classList.remove('bg-trans');
+    }
+    document.querySelectorAll('#bg-controls .color-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function toggleHandedness() {
+    AudioEngine.playClick();
+    const wrapper = document.getElementById('controls-wrapper');
+    wrapper.classList.toggle('left-handed');
+    const isLeft = wrapper.classList.contains('left-handed');
+
+    const msg = isLeft ? "♻️" : "♻️";
+    console.log(msg);
 }
 
 function setLineWidth(val) {
@@ -598,19 +698,47 @@ function setTool(tool) {
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
     const target = document.getElementById('tool-' + tool);
     if(target) target.classList.add('active');
+    applyDrawingStyles();
 }
 
 function saveState() {
-    if (undoStack.length > 20) undoStack.shift();
+    if (undoStack.length > 30) undoStack.shift();
     undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    redoStack = [];
 }
 
 function undo() {
     if (undoStack.length > 1) {
-        undoStack.pop();
+        redoStack.push(undoStack.pop());
         ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
         AudioEngine.playClick();
     }
+}
+
+function redo() {
+    if (redoStack.length > 0) {
+        const data = redoStack.pop();
+        undoStack.push(data);
+        ctx.putImageData(data, 0, 0);
+        AudioEngine.playClick();
+    }
+}
+
+function saveAsImage() {
+    AudioEngine.playClick();
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tCtx = tempCanvas.getContext('2d');
+    if (currentSettings.bgColor !== 'transparent') {
+        tCtx.fillStyle = currentSettings.bgColor;
+        tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    }
+    tCtx.drawImage(canvas, 0, 0);
+    const link = document.createElement('a');
+    link.download = 'neon-art.png';
+    link.href = tempCanvas.toDataURL('image/png');
+    link.click();
 }
 
 function getPos(e) {
@@ -626,8 +754,8 @@ function startDrawing(e) {
     startX = pos.x;
     startY = pos.y;
     snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    
-    if (currentSettings.tool === 'pen') {
+    applyDrawingStyles();
+    if (currentSettings.tool === 'pen' || currentSettings.tool === 'eraser') {
         ctx.beginPath();
         ctx.moveTo(startX, startY);
     }
@@ -637,11 +765,12 @@ function draw(e) {
     if (!isDrawing) return;
     e.preventDefault();
     const pos = getPos(e);
-
-    if (currentSettings.tool === 'pen') {
+    if (currentSettings.tool === 'pen' || currentSettings.tool === 'eraser') {
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
     } else {
+        const originalOp = ctx.globalCompositeOperation;
+        ctx.globalCompositeOperation = 'source-over'; 
         ctx.putImageData(snapshot, 0, 0);
         if (currentSettings.tool === 'rect') {
             ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
@@ -651,6 +780,7 @@ function draw(e) {
             ctx.arc(startX, startY, r, 0, Math.PI * 2);
             ctx.stroke();
         }
+        ctx.globalCompositeOperation = originalOp;
     }
 }
 
@@ -662,7 +792,7 @@ function stopDrawing() {
 }
 
 function clearCanvas() {
-    if(confirm("すべて消去しますか？")) {
+    if(confirm("キャンバスの内容をすべて消去しますか？")) {
         AudioEngine.playClick();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         saveState();
@@ -672,7 +802,10 @@ function clearCanvas() {
 function openDraw() {
     document.getElementById('draw-modal').style.display = 'flex';
     resizeCanvas();
-
+    if(undoStack.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        saveState();
+    }
     canvas.onmousedown = startDrawing;
     window.onmousemove = draw;
     window.onmouseup = stopDrawing;
@@ -682,8 +815,7 @@ function openDraw() {
 }
 
 function closeDraw() {
-
-    if(confirm("お絵描きを終わりますか？\n（描いた絵は保存されません）")) {
+    if(confirm("お絵描きを終わりますか？")) {
         AudioEngine.playClick();
         document.getElementById('draw-modal').style.display = 'none';
     }
@@ -695,32 +827,33 @@ window.addEventListener('storage', (e) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     AudioEngine.updateButton();
-    
     document.getElementById('sound-toggle').addEventListener('click', (e) => {
         e.stopPropagation();
         AudioEngine.init();
         AudioEngine.toggleMute();
     });
-    
-    document.getElementById('draw-menu-card').addEventListener('click', (e) => {
-        e.preventDefault();
-        AudioEngine.playClick(() => { openDraw(); });
-    });
-
-    document.querySelectorAll('.game-card').forEach(card => {
-        if(card.id === 'draw-menu-card') return;
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach(card => {
         card.addEventListener('mouseenter', () => AudioEngine.playHover());
         card.addEventListener('click', (e) => {
-            const url = card.getAttribute('href');
-            if (!url) return;
             e.preventDefault();
-            AudioEngine.playClick(() => { window.location.href = url; });
+            card.classList.add('flash-active');
+            const handleAction = () => {
+                if(card.id === 'draw-menu-card') {
+                    openDraw();
+                    card.classList.remove('flash-active');
+                } else {
+                    const url = card.getAttribute('href');
+                    if (url) window.location.href = url;
+                }
+            };
+            AudioEngine.playClick(handleAction);
         });
     });
 });
 
-const unlockAudio = () => {
-    AudioEngine.init();
+const unlockAudio = async () => {
+    await AudioEngine.init();
     AudioEngine.startBGM();
     window.removeEventListener('click', unlockAudio);
     window.removeEventListener('touchstart', unlockAudio);
