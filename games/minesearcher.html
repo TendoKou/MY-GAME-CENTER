@@ -10,146 +10,111 @@
             --neon-pink: #ff71ce; --neon-blue: #01cdfe; --neon-green: #05ffa1;
             --purple: #b967ff; --yellow: #fffb96; --bg-dark: #241734;
             --panel-bg: #161625;
-            --cell-size: min(40px, 10vw, 5.5vh);
+            --cell-size: 32px;
         }
-
+        * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; box-sizing: border-box; }
         body { 
-            background-color: var(--bg-dark);
-            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-dark); font-family: sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100dvh; margin: 0; overflow: hidden; color: white; touch-action: manipulation;
+            height: 100dvh; margin: 0; overflow: hidden; color: white; touch-action: none;
             background: linear-gradient(180deg, #4b0082 0%, #241734 100%);
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
-
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
-
         body::before {
             content: ""; position: fixed; bottom: -50%; left: -50%; width: 200%; height: 200%;
-            background-image: linear-gradient(var(--neon-blue) 1px, transparent 1px),
-                              linear-gradient(90deg, var(--neon-blue) 1px, transparent 1px);
-            background-size: 60px 60px; z-index: -1;
-            transform: perspective(300px) rotateX(60deg);
+            background-image: linear-gradient(var(--neon-blue) 1px, transparent 1px), linear-gradient(90deg, var(--neon-blue) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: -1; transform: perspective(300px) rotateX(60deg);
             opacity: 0.2; animation: moveGrid 5s linear infinite;
         }
-
         @keyframes moveGrid { from { background-position: 0 0; } to { background-position: 0 60px; } }
-
-        .header-area {
-            display: flex; align-items: center; justify-content: center;
-            gap: 15px; margin-bottom: 10px; z-index: 100; width: 100%;
+        #title-screen {
+            position: fixed; inset: 0; background: rgba(10,10,26,0.98);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000;
         }
-
-        h1 { 
-            color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue);
-            font-style: italic; font-size: clamp(18px, 4.5vw, 28px); margin: 0; letter-spacing: 2px;
-            font-weight: 900;
+        .main-title {
+            font-size: clamp(32px, 10vw, 48px); font-weight: 900; color: #fff;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-pink);
+            margin-bottom: 30px; letter-spacing: 4px; font-style: italic;
         }
-
+        .header-area { display: none; align-items: center; justify-content: center; gap: 15px; margin-bottom: 8px; z-index: 100; width: 100%; }
+        h1 { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); font-style: italic; font-size: 24px; margin: 0; font-weight: 900; }
         #sound-toggle, #rev-btn-top {
-            font-size: 22px; cursor: pointer; user-select: none;
-            filter: drop-shadow(0 0 8px var(--neon-blue));
-            background: rgba(255,255,255,0.1); border: 1px solid var(--neon-blue);
-            border-radius: 6px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; background: rgba(255,255,255,0.1); 
+            border: 1px solid var(--neon-blue); border-radius: 6px; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
         }
-        #rev-btn-top { border-color: var(--neon-green); color: var(--neon-green); }
-
-        #game-box { 
-            background: var(--panel-bg); border: 4px solid var(--neon-blue); padding: 8px; 
-            user-select: none; box-shadow: 0 0 20px rgba(1, 205, 254, 0.3), inset 0 0 15px rgba(0,0,0,0.8);
-            border-radius: 8px; position: relative; z-index: 10;
-        }
-
-        #header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 8px; background: #000; padding: 6px 10px;
-            border: 2px solid #333; border-radius: 4px; gap: 10px;
-        }
+        #game-box { display: none; background: var(--panel-bg); border: 4px solid var(--neon-blue); padding: 6px; border-radius: 8px; position: relative; z-index: 10; }
+        #header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #000; padding: 6px 10px; border: 2px solid #333; border-radius: 4px; }
         #header.reversed { flex-direction: row-reverse; }
-
-        #mine-count, #timer { 
-            color: #ff0044; font-family: monospace; font-size: 22px;
-            text-shadow: 0 0 10px #ff0044; min-width: 50px; text-align: center;
-        }
-
-        #face-status, #mode-toggle { 
-            font-size: 20px; cursor: pointer; background: #222;
-            border: 2px solid var(--neon-blue); width: 38px; height: 38px;
-            display: flex; align-items: center; justify-content: center; border-radius: 50%;
-        }
+        #mine-count, #timer { color: #ff0044; font-family: monospace; font-size: 24px; text-shadow: 0 0 10px #ff0044; min-width: 50px; text-align: center; }
+        #face-status, #mode-toggle { font-size: 22px; cursor: pointer; background: #222; border: 2px solid var(--neon-blue); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
         #mode-toggle.active { border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
-
-        #grid { 
-            display: grid; grid-template-columns: repeat(8, var(--cell-size)); 
-            grid-template-rows: repeat(8, var(--cell-size)); 
-            gap: 3px; background: #222; padding: 4px; border-radius: 4px;
-        }
-
+        #grid { display: grid; gap: 3px; background: #222; padding: 4px; border-radius: 4px; }
         .cell { 
-            width: 100%; height: 100%; background: #333; border: 2px solid #555;
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; cursor: pointer; box-sizing: border-box;
-            font-size: 18px; border-radius: 2px;
+            width: var(--cell-size); height: var(--cell-size); background: #333; border: 2px solid #555;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 18px;
         }
         .cell.revealed { background: #111; border: 1px solid #222; }
-        .cell.mine { background: var(--neon-pink); box-shadow: inset 0 0 10px #000; }
-
-        .ui-main { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 340px; margin-top: 15px; gap: 8px; z-index: 10; }
-        .button-row { display: flex; justify-content: space-around; width: 100%; gap: 8px; }
-        
+        .cell.mine { background: var(--neon-pink); }
+        .ui-main { display: none; flex-direction: column; align-items: center; width: 95%; max-width: 380px; margin-top: 15px; gap: 8px; z-index: 10; }
+        .button-row { display: flex; gap: 6px; width: 100%; }
         .btn {
-            background: #111; border: 2px solid; padding: 10px 5px;
-            border-radius: 5px; cursor: pointer;
-            font-weight: bold; font-size: 11px; flex: 1; text-transform: uppercase; color: white;
+            background: rgba(255,255,255,0.08); border: 1px solid #444; padding: 8px 0;
+            border-radius: 6px; cursor: pointer; color: #fff; font-size: 11px; flex: 1;
+            text-align: center; font-weight: bold; height: 44px;
         }
-        .btn-pink { border-color: var(--neon-pink); color: var(--neon-pink); }
-        .btn-blue { border-color: var(--neon-blue); color: var(--neon-blue); }
-        .btn-yellow { border-color: var(--yellow); color: var(--yellow); }
-
+        .diff-btn {
+            background: linear-gradient(45deg, var(--neon-pink), var(--purple));
+            border: none; padding: 12px 40px; border-radius: 50px; font-size: 20px;
+            margin: 10px 0; width: 260px; color: white; cursor: pointer; box-shadow: 0 0 15px var(--neon-pink);
+        }
         .n1 { color: var(--neon-blue); } .n2 { color: var(--neon-green); } .n3 { color: var(--neon-pink); }
         .n4 { color: var(--purple); } .n5 { color: var(--yellow); }
-
         #ranking-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.9); z-index: 3000; flex-direction: column; align-items: center; justify-content: center;
         }
     </style>
 </head>
-<body>
-
+<body oncontextmenu="return false;">
     <canvas id="confetti-canvas"></canvas>
-
-    <div class="header-area">
+    <div id="title-screen">
+        <h1 class="main-title">MINE SEARCHER</h1>
+        <button class="diff-btn" onclick="startGame('easy')">EASY (8x8)</button>
+        <button class="diff-btn" style="filter: hue-rotate(45deg);" onclick="startGame('normal')">NORMAL (10x10)</button>
+        <button class="diff-btn" style="filter: hue-rotate(90deg);" onclick="startGame('hard')">HARD (12x12)</button>
+        <button class="btn" style="border-color:var(--neon-green); color:var(--neon-green); width:140px; margin-top:20px; flex:none;" onclick="showRanking()">RANKING</button>
+    </div>
+    <div class="header-area" id="game-header">
         <div id="rev-btn-top" onclick="toggleReverse()">🔄</div>
         <h1>MINE SEARCHER</h1>
-        <div id="sound-toggle">🔊</div>
+        <div id="sound-toggle" onclick="AudioEngine.toggle()">🔊</div>
     </div>
-
     <div id="game-box">
         <div id="header">
             <div id="mine-count">010</div>
             <div id="mode-toggle" onclick="toggleMode()">⛏️</div>
-            <div id="face-status" onclick="saveAndReset(false)">😎</div>
+            <div id="face-status" onclick="manualReset()">😎</div>
             <div id="timer">000</div>
         </div>
         <div id="grid"></div>
     </div>
-
-    <div class="ui-main">
+    <div class="ui-main" id="game-footer">
         <div class="button-row">
-            <button class="btn btn-pink" onclick="showRanking()">Ranking</button>
-            <button class="btn btn-yellow" onclick="saveAndReset(false)">Reset</button>
-            <button class="btn btn-blue" onclick="confirmMenu()">Menu</button>
+            <button class="btn" style="border-color:var(--neon-pink); color:var(--neon-pink);" onclick="showRanking()">RANKING</button>
+            <button class="btn" style="border-color:var(--yellow); color:var(--yellow);" onclick="manualReset()">RESET</button>
+            <button class="btn" style="border-color:var(--neon-green); color:var(--neon-green);" onclick="titleAction()">TITLE</button>
+            <button class="btn" style="border-color:var(--neon-blue); color:var(--neon-blue);" onclick="backToMenu()">MENU</button>
         </div>
     </div>
-
     <div id="ranking-modal">
-        <div style="background: var(--panel-bg); border: 3px solid var(--neon-blue); padding: 20px; border-radius: 15px; width: 260px; text-align: center;">
-            <h2 style="color: var(--neon-blue); font-size: 18px;">TOP SCORES</h2>
+        <div style="background: var(--panel-bg); border: 3px solid var(--neon-blue); padding: 20px; border-radius: 15px; width: 280px; text-align: center;">
+            <h2 style="color: var(--neon-blue);">TOP SCORES</h2>
             <ul id="ranking-list" style="list-style: none; padding: 0; margin: 15px 0; text-align: left; font-family: monospace; color: var(--neon-green);"></ul>
-            <button class="btn btn-blue" style="width: 100%" onclick="closeRanking()">Close</button>
+            <button class="btn" style="width: 100%; border-color:var(--neon-blue);" onclick="closeRanking()">CLOSE</button>
         </div>
     </div>
-
     <script>
         const AudioEngine = {
             ctx: null, isMuted: localStorage.getItem('v_snd_muted') === 'true',
@@ -164,14 +129,11 @@
             toggle() { this.isMuted = !this.isMuted; localStorage.setItem('v_snd_muted', this.isMuted); this.sync(); },
             play(type) {
                 if (this.isMuted) return; this.init();
-                
                 const now = Date.now();
                 if (type === 'click' && now - this.lastPlayTime < 50) return;
                 this.lastPlayTime = now;
-
                 const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                
                 if (type === 'clear') { osc.type = 'square'; osc.frequency.setValueAtTime(523, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1046, this.ctx.currentTime + 0.3); gain.gain.setValueAtTime(0.03, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.4); }
                 else if (type === 'bomb') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, this.ctx.currentTime); gain.gain.setValueAtTime(0.01, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.3); }
                 else if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, this.ctx.currentTime); gain.gain.setValueAtTime(0.015, this.ctx.currentTime); osc.start(); osc.stop(this.ctx.currentTime + 0.1); }
@@ -180,32 +142,41 @@
             }
         };
 
-        const size = 8; const totalMines = 10;
-        let grid = []; let gameOver = false; let flagsUsed = 0; let time = 0; let timerInterval = null;
-        let isFlagMode = false; let firstClick = true;
-
+        let boardSize = 8, totalMines = 10, grid = [], gameOver = false, flagsUsed = 0, time = 0, timerInterval = null, isFlagMode = false, firstClick = true;
+        const RANK_KEY = 'mineRanking';
         const confettiCanvas = document.getElementById('confetti-canvas');
         const ctx = confettiCanvas.getContext('2d');
         let particles = [];
         function resizeCanvas() { confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
         function createParticles() {
             const colors = ['#ff71ce', '#01cdfe', '#05ffa1', '#fffb96', '#ffffff'];
-            for (let i = 0; i < 100; i++) {
-                particles.push({ x: Math.random() * confettiCanvas.width, y: Math.random() * confettiCanvas.height - 100, size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)], speed: Math.random() * 3 + 2, angle: Math.random() * 6, spin: Math.random() * 0.2 - 0.1 });
-            }
+            for (let i = 0; i < 100; i++) particles.push({ x: Math.random() * confettiCanvas.width, y: Math.random() * confettiCanvas.height - 100, size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)], speed: Math.random() * 3 + 2, angle: Math.random() * 6, spin: Math.random() * 0.2 - 0.1 });
         }
         function drawConfetti() {
-            if (particles.length === 0) return;
-            ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            if (particles.length === 0) return; ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
             particles.forEach((p) => { p.y += p.speed; p.angle += p.spin; ctx.fillStyle = p.color; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore(); if (p.y > confettiCanvas.height) p.y = -20; });
             requestAnimationFrame(drawConfetti);
         }
-
-        function toggleMode() { isFlagMode = !isFlagMode; AudioEngine.play('switch'); const btn = document.getElementById('mode-toggle'); if (isFlagMode) { btn.innerText = "🚩"; btn.classList.add('active'); } else { btn.innerText = "⛏️"; btn.classList.remove('active'); } }
-        function toggleReverse() { const header = document.getElementById('header'); header.classList.toggle('reversed'); AudioEngine.play('switch'); }
-
+        function startGame(diff) {
+            AudioEngine.play('switch');
+            if(diff === 'easy') { boardSize = 8; totalMines = 10; }
+            else if(diff === 'hard') { boardSize = 12; totalMines = 30; }
+            else { boardSize = 10; totalMines = 18; }
+            const vh = window.innerHeight; const vw = window.innerWidth;
+            let cellSize = Math.floor(Math.min(vw * 0.92 / boardSize, vh * 0.55 / boardSize));
+            cellSize = Math.min(cellSize, 45); 
+            document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('game-header').style.display = 'flex';
+            document.getElementById('game-box').style.display = 'block';
+            document.getElementById('game-footer').style.display = 'flex';
+            initGame();
+        }
+        function titleAction() { AudioEngine.play('switch'); if(confirm("タイトルに戻りますか？")) location.reload(); }
+        function backToMenu() { AudioEngine.play('switch'); if(confirm("メインページに戻りますか？")) location.href = '../index.html'; }
+        function toggleMode() { AudioEngine.play('switch'); isFlagMode = !isFlagMode; const btn = document.getElementById('mode-toggle'); if (isFlagMode) { btn.innerText = "🚩"; btn.classList.add('active'); } else { btn.innerText = "⛏️"; btn.classList.remove('active'); } }
+        function toggleReverse() { AudioEngine.play('switch'); const header = document.getElementById('header'); header.classList.toggle('reversed'); }
         function initGame() {
             gameOver = false; flagsUsed = 0; time = 0; firstClick = true;
             particles = []; ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
@@ -213,111 +184,104 @@
             document.getElementById('timer').innerText = "000"; updateMineCount();
             document.getElementById('face-status').innerText = "😎";
             const gridEl = document.getElementById('grid'); gridEl.innerHTML = ''; grid = [];
-            for (let r = 0; r < size; r++) {
+            gridEl.style.gridTemplateColumns = `repeat(${boardSize}, var(--cell-size))`;
+            for (let r = 0; r < boardSize; r++) {
                 grid[r] = [];
-                for (let c = 0; c < size; c++) {
+                for (let c = 0; c < boardSize; c++) {
                     const el = document.createElement('div'); el.className = 'cell';
+                    el.onpointerdown = (e) => { if(e.pointerType === 'touch' || e.button === 0) { if (isFlagMode) toggleFlag(r, c); else reveal(r, c); } };
                     el.oncontextmenu = (e) => { e.preventDefault(); toggleFlag(r, c); };
-                    el.onclick = () => { AudioEngine.init(); if (isFlagMode) toggleFlag(r, c); else reveal(r, c); };
                     grid[r][c] = { r, c, isMine: false, revealed: false, flagged: false, count: 0, el };
                     gridEl.appendChild(el);
                 }
             }
         }
-
         function placeMines(startR, startC) {
             let placed = 0;
             while (placed < totalMines) {
-                let r = Math.floor(Math.random() * size), c = Math.floor(Math.random() * size);
+                let r = Math.floor(Math.random() * boardSize), c = Math.floor(Math.random() * boardSize);
                 if (!grid[r][c].isMine && (Math.abs(r - startR) > 1 || Math.abs(c - startC) > 1)) { grid[r][c].isMine = true; placed++; }
             }
             grid.flat().forEach(cell => {
                 if (!cell.isMine) {
                     let count = 0;
-                    for (let dr = -1; dr <= 1; dr++) {
-                        for (let dc = -1; dc <= 1; dc++) {
-                            let nr = cell.r + dr, nc = cell.c + dc;
-                            if (nr >= 0 && nr < size && nc >= 0 && nc < size && grid[nr][nc].isMine) count++;
-                        }
+                    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                        let nr = cell.r + dr, nc = cell.c + dc;
+                        if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize && grid[nr][nc].isMine) count++;
                     }
                     cell.count = count;
                 }
             });
         }
-
-        function saveAndReset(isGameOver) {
+        function manualReset() {
             AudioEngine.play('switch');
-            const msg = isGameOver ? "ゲームオーバー。記録を保存しますか？" : "スコアを保存してリセットしますか？";
-            if (confirm(msg)) {
-                const name = prompt("名前", "PLAYER");
+            saveAndReset();
+        }
+        function saveAndReset() {
+            if (confirm("スコアを登録しますか？")) {
+                const name = prompt("名前:", "PLAYER");
+                if (name === null) return;
                 if (name) {
-                    let ranking = JSON.parse(localStorage.getItem('mineRanking') || '[]');
-                    ranking.push({name, score: time});
+                    let ranking = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+                    ranking.push({name: name, score: time});
                     ranking.sort((a, b) => a.score - b.score);
-                    localStorage.setItem('mineRanking', JSON.stringify(ranking.slice(0, 5)));
+                    ranking = ranking.slice(0, 5);
+                    localStorage.setItem(RANK_KEY, JSON.stringify(ranking));
                 }
                 initGame();
-            } else if (!isGameOver) {
-                if (confirm("登録せずにリセットしますか？")) initGame();
             } else {
-                initGame();
+                if (confirm("登録せずにリセットしますか？")) initGame();
             }
         }
-
-        function confirmMenu() { AudioEngine.play('switch'); if (confirm("メインページに戻りますか？")) location.href = '../index.html'; }
         function showRanking() {
-            AudioEngine.play('switch'); const list = document.getElementById('ranking-list'); list.innerHTML = '';
-            const ranking = JSON.parse(localStorage.getItem('mineRanking') || '[]');
-            if (ranking.length === 0) list.innerHTML = '<li>NO DATA</li>';
-            else ranking.forEach((d, i) => list.innerHTML += `<li>#${i+1} ${d.name}: ${d.score}s</li>`);
+            AudioEngine.play('switch');
+            const list = document.getElementById('ranking-list'), r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+            list.innerHTML = r.length ? r.map((d,i)=>`<li><span style="color:var(--yellow)">#${i+1}</span> ${d.name}: ${d.score}</li>`).join('') : '<li>No Data</li>';
             document.getElementById('ranking-modal').style.display = 'flex';
         }
         function closeRanking() { AudioEngine.play('switch'); document.getElementById('ranking-modal').style.display = 'none'; }
-        
         function toggleFlag(r, c) {
             if (gameOver || grid[r][c].revealed) return;
-            AudioEngine.play('flag'); grid[r][c].flagged = !grid[r][c].flagged;
+            AudioEngine.play('flag');
+            grid[r][c].flagged = !grid[r][c].flagged;
             grid[r][c].el.innerText = grid[r][c].flagged ? "🚩" : "";
             flagsUsed += grid[r][c].flagged ? 1 : -1; updateMineCount();
         }
         function updateMineCount() { document.getElementById('mine-count').innerText = Math.max(0, totalMines - flagsUsed).toString().padStart(3, '0'); }
         function startTimer() { if (timerInterval) return; timerInterval = setInterval(() => { time++; document.getElementById('timer').innerText = time.toString().padStart(3, '0'); }, 1000); }
-
         function reveal(r, c) {
             if (gameOver || grid[r][c].revealed || grid[r][c].flagged) return;
             if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
             const cell = grid[r][c]; cell.revealed = true; cell.el.classList.add('revealed');
-            if (cell.isMine) { cell.el.innerText = "💥"; cell.el.classList.add('mine'); AudioEngine.play('bomb'); endGame(false); }
-            else {
+            if (cell.isMine) {
+                cell.el.innerText = "💥"; cell.el.classList.add('mine');
+                AudioEngine.play('bomb'); endGame(false);
+            } else {
                 AudioEngine.play('click');
                 if (cell.count > 0) { cell.el.innerText = cell.count; cell.el.classList.add('n' + cell.count); }
                 else {
                     for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-                        let nr = r + dr, nc = c + dc; if (nr >= 0 && nr < size && nc >= 0 && nc < size) reveal(nr, nc);
+                        let nr = r + dr, nc = c + dc; if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) reveal(nr, nc);
                     }
                 }
                 checkWin();
             }
         }
-
         function checkWin() {
             const revealedCount = grid.flat().filter(c => c.revealed && !c.isMine).length;
-            if (revealedCount === (size * size - totalMines)) endGame(true);
+            if (revealedCount === (boardSize * boardSize - totalMines)) endGame(true);
         }
-
         function endGame(isWin) {
             gameOver = true; clearInterval(timerInterval);
             document.getElementById('face-status').innerText = isWin ? "👑" : "💀";
-            if (isWin) { particles = []; createParticles(); drawConfetti(); AudioEngine.play('clear'); }
-            else { 
+            if (isWin) {
+                createParticles(); drawConfetti(); AudioEngine.play('clear');
+                setTimeout(() => { alert("CLEAR! SCORE: " + time); }, 500);
+            } else { 
                 grid.flat().forEach(c => { if(c.isMine) { c.el.innerText = "💣"; c.el.classList.add('mine'); } });
-                setTimeout(() => saveAndReset(true), 1000);
+                setTimeout(() => { alert("GAME OVER! SCORE: " + time); }, 500);
             }
         }
-
-        document.getElementById('sound-toggle').addEventListener('click', (e) => { e.stopPropagation(); AudioEngine.toggle(); });
-        initGame();
-
         console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", "color: #ff71ce; font-size: 20px; font-weight: bold;", "color: #01cdfe; font-size: 14px;");
     </script>
 </body>

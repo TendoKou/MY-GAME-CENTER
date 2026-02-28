@@ -140,7 +140,6 @@ let state = [], selected = null, score = 0, firstHoleMade = false;
 const Snd = {
     ctx: null,
     muted: localStorage.getItem('v_snd_muted') === 'true',
-    bgmId: null,
     step: 0,
     init() {
         if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -170,15 +169,6 @@ const Snd = {
         g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + d);
         o.connect(g); g.connect(this.ctx.destination);
         o.start(); o.stop(this.ctx.currentTime + d);
-    },
-    startBGM() {
-        if (this.bgmId) return;
-        this.bgmId = setInterval(() => {
-            if (this.muted) return;
-            const notes = [110, 146, 98, 130];
-            this.play(notes[this.step % 4], 'triangle', 2.0, 0.015);
-            this.step++;
-        }, 1200);
     }
 };
 
@@ -212,7 +202,7 @@ function render() {
                     const p = document.createElement('div');
                     p.className = 'peg';
                     if (selected && selected.r === r && selected.c === c) p.className += ' selected';
-                    p.onclick = (e) => { e.stopPropagation(); Snd.startBGM(); handleClick(r, c); };
+                    p.onclick = (e) => { e.stopPropagation(); handleClick(r, c); };
                     cell.appendChild(p);
                 } else { cell.onclick = () => handleClick(r, c); }
             }

@@ -854,6 +854,15 @@ document.addEventListener('DOMContentLoaded', () => {
         AudioEngine.init();
         AudioEngine.toggleMute();
     });
+    
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.classList.remove('flash-active');
+            });
+        }
+    });
+
     const cards = document.querySelectorAll('.game-card');
     cards.forEach(card => {
         card.addEventListener('mouseenter', () => AudioEngine.playHover());

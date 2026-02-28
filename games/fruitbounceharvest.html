@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>FRUIT BOUNCE HARVEST</title>
+    <title>FRUIT BOUNCE HARVEST - RICH</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         :root {
@@ -116,56 +116,110 @@
         const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const scoreEl = document.getElementById('scoreVal'); const nextEl = document.getElementById('nextEmoji'); const RANK_KEY = 'fruitRanking'; 
         const W = 320; const H = 450; canvas.width = W; canvas.height = H;
         const fruitTypes = [{emoji:'🫐',r:12,s:10},{emoji:'🍒',r:18,s:20},{emoji:'🍓',r:25,s:40},{emoji:'🍇',r:32,s:80},{emoji:'🥑',r:40,s:160},{emoji:'🍊',r:50,s:320},{emoji:'🍎',r:62,s:640},{emoji:'🍐',r:75,s:1280},{emoji:'🍈',r:90,s:2500},{emoji:'🍑',r:108,s:5000}];
-        let fruits = []; let currentX = W/2; let currentType = 0; let nextType = 0; let score = 0; let isDropping = false; let gameActive = true; let gameOverTimer = 0; const DEADLINE_Y = 85;
+        let fruits = []; let particles = []; let currentX = W/2; let currentType = 0; let nextType = 0; let score = 0; let isDropping = false; let gameActive = true; let gameOverTimer = 0; const DEADLINE_Y = 85;
+
+        function addParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x, y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6, 
+                    life: 1.0, size: Math.random() * 4 + 2, color: color || '#fff'
+                });
+            }
+        }
 
         document.getElementById('mute-btn').addEventListener('click', (e) => { e.stopPropagation(); AudioEngine.toggle(); });
         function toggleReverse() { AudioEngine.init(); document.getElementById('layoutContainer').classList.toggle('reversed'); AudioEngine.playTone(600, 'sine', 0.1, 0.05); }
         function confirmMenu() { AudioEngine.init(); if (confirm("ゲームを終了してメインページに戻りますか？")) location.href = '../index.html'; }
-        function init() { fruits = []; score = 0; scoreEl.innerText = "00000"; currentType = Math.floor(Math.random()*5); nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; gameActive = true; gameOverTimer = 0; }
-        function spawn(x, y, type, isCombine = false) { fruits.push({ x, y, vx: 0, vy: isCombine ? -1.5 : 0, type, r: fruitTypes[type].r, angle: 0, va: 0, scale: isCombine ? 0.6 : 0.1, poyo: isCombine ? 1.6 : 1.2, spawnTime: Date.now(), glow: isCombine ? 1.0 : 0 }); }
+        function init() { fruits = []; particles = []; score = 0; scoreEl.innerText = "00000"; currentType = Math.floor(Math.random()*5); nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; gameActive = true; gameOverTimer = 0; }
+        
+        function spawn(x, y, type, isCombine = false) { 
+            fruits.push({ 
+                x, y, vx: 0, vy: isCombine ? -2.5 : 0, type, r: fruitTypes[type].r, 
+                angle: 0, va: 0, scale: isCombine ? 0.4 : 0.0, 
+                poyo: isCombine ? 1.8 : 1.4, spawnTime: Date.now(), glow: isCombine ? 1.0 : 0 
+            }); 
+            if (isCombine) addParticles(x, y, '#ff71ce');
+        }
+
         function handleMove(e) { if (!gameActive || isDropping) return; AudioEngine.init(); const rect = canvas.getBoundingClientRect(); const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX; currentX = (clientX - rect.left) * (W / rect.width); const r = fruitTypes[currentType].r; currentX = Math.max(r, Math.min(W - r, currentX)); }
-        function handleRelease() { if (isDropping || !gameActive) return; AudioEngine.init(); isDropping = true; AudioEngine.playTone(400, 'sine', 0.1, 0.05); spawn(currentX, 40, currentType); setTimeout(() => { currentType = nextType; nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; isDropping = false; }, 700); }
+        function handleRelease() { if (isDropping || !gameActive) return; AudioEngine.init(); isDropping = true; AudioEngine.playTone(400, 'sine', 0.1, 0.05); spawn(currentX, 40, currentType); setTimeout(() => { currentType = nextType; nextType = Math.floor(Math.random()*5); nextEl.innerText = fruitTypes[nextType].emoji; isDropping = false; }, 600); }
         canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mousedown', handleMove); canvas.addEventListener('mouseup', handleRelease);
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); AudioEngine.init(); handleMove(e); });
         canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); });
         canvas.addEventListener('touchend', (e) => { e.preventDefault(); handleRelease(); });
 
         function update() {
-            if (!gameActive) return; const now = Date.now(); const subSteps = 8; const gravity = 0.6 / subSteps; let exceeded = false;
+            if (!gameActive) return; const now = Date.now(); const subSteps = 10; const gravity = 0.3 / subSteps; let exceeded = false;
+            
+            particles.forEach((p, idx) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                if (p.life <= 0) particles.splice(idx, 1);
+            });
+
             for (let s = 0; s < subSteps; s++) {
                 for (let i = 0; i < fruits.length; i++) {
                     let f = fruits[i]; f.vy += gravity; f.x += f.vx / subSteps; f.y += f.vy / subSteps; f.angle += f.va / subSteps;
-                    f.va = Math.max(-0.05, Math.min(0.05, f.va)); f.vx *= Math.pow(0.98, 1/subSteps); f.va *= Math.pow(0.90, 1/subSteps);
-                    if (f.x < f.r) { f.x = f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.85; } if (f.x > W - f.r) { f.x = W - f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.85; }
-                    if (f.y > H - f.r) { f.y = H - f.r; f.vy *= -0.2; f.vx *= 0.9; f.va = f.vx * 0.05; if (Math.abs(f.vy) > 0.5) f.poyo = 0.8; }
+                    
+                    f.va = Math.max(-0.05, Math.min(0.05, f.va));
+                    f.vx *= Math.pow(0.995, 1/subSteps); f.va *= Math.pow(0.90, 1/subSteps);
+                    
+                    if (f.x < f.r) { f.x = f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.8; } 
+                    if (f.x > W - f.r) { f.x = W - f.r; f.vx *= -0.3; f.va *= 0.5; f.poyo = 0.8; }
+                    if (f.y > H - f.r) { f.y = H - f.r; f.vy *= -0.2; f.vx *= 0.8; f.va = f.vx * 0.05; if (Math.abs(f.vy) > 0.5) f.poyo = 0.7; }
+                    
                     for (let j = i + 1; j < fruits.length; j++) {
-                        let f2 = fruits[j]; let dx = f2.x - f.x; let dy = f2.y - f.y; let distSq = dx * dx + dy * dy; let minDist = (f.r + f2.r);
+                        let f2 = fruits[j]; let dx = f2.x - f.x; let dy = f2.y - f.y; let distSq = dx * dx + dy * dy; 
+                        let minDist = (f.r + f2.r) * 0.92;
                         if (distSq < minDist * minDist) {
                             let dist = Math.sqrt(distSq);
-                            if (f.type === f2.type && now - f.spawnTime > 500 && now - f2.spawnTime > 500) {
+                            if (f.type === f2.type && now - f.spawnTime > 400 && now - f2.spawnTime > 400) {
                                 const nt = f.type + 1; const nx = (f.x + f2.x) / 2, ny = (f.y + f2.y) / 2; fruits.splice(j, 1); fruits.splice(i, 1);
-                                if (nt < fruitTypes.length) { AudioEngine.playTone(300 + nt * 40, 'sine', 0.2, 0.1); spawn(nx, ny, nt, true); score += fruitTypes[nt].s; scoreEl.innerText = score.toString().padStart(5, '0'); } else { AudioEngine.playTone(800, 'square', 0.4, 0.1); score += 10000; scoreEl.innerText = score.toString().padStart(5, '0'); }
+                                if (nt < fruitTypes.length) { AudioEngine.playTone(300 + nt * 40, 'sine', 0.2, 0.1); spawn(nx, ny, nt, true); score += fruitTypes[nt].s; scoreEl.innerText = score.toString().padStart(5, '0'); } else { AudioEngine.playTone(800, 'square', 0.4, 0.1); addParticles(nx, ny, '#fffb96'); score += 10000; scoreEl.innerText = score.toString().padStart(5, '0'); }
                                 return;
                             }
-                            let angle = Math.atan2(dy, dx); let overlap = minDist - dist; let spring = 0.4;
-                            f.x -= Math.cos(angle) * overlap * spring; f.y -= Math.sin(angle) * overlap * spring; f2.x += Math.cos(angle) * overlap * spring; f2.y += Math.sin(angle) * overlap * spring;
-                            let force = overlap * 0.3; f.vx -= Math.cos(angle) * force; f.vy -= Math.sin(angle) * force; f2.vx += Math.cos(angle) * force; f2.vy += Math.sin(angle) * force;
-                            f.va *= 0.95; f2.va *= 0.95; if (overlap > 1.2) { f.poyo = 1.2; f2.poyo = 1.2; }
+                            let angle = Math.atan2(dy, dx); let overlap = minDist - dist; 
+                            let spring = 0.65; 
+                            f.x -= Math.cos(angle) * overlap * spring; f.y -= Math.sin(angle) * overlap * spring;
+                            f2.x += Math.cos(angle) * overlap * spring; f2.y += Math.sin(angle) * overlap * spring;
+                            
+                            let force = overlap * 0.35; 
+                            f.vx -= Math.cos(angle) * force; f.vy -= Math.sin(angle) * force;
+                            f2.vx += Math.cos(angle) * force; f2.vy += Math.sin(angle) * force;
+                            
+                            f.va *= 0.95; f2.va *= 0.95;
+                            if (overlap > 1.0) { f.poyo = 1.4; f2.poyo = 1.4; }
                         }
                     }
                 }
             }
-            fruits.forEach(f => { f.poyo += (1 - f.poyo) * 0.15; f.scale += (1 - f.scale) * 0.15; f.glow *= 0.85; if (f.y - f.r < DEADLINE_Y && now - f.spawnTime > 1500) exceeded = true; });
+            fruits.forEach(f => { f.poyo += (1 - f.poyo) * 0.15; f.scale += (1 - f.scale) * 0.15; f.glow *= 0.9; if (f.y - f.r < DEADLINE_Y && now - f.spawnTime > 1500) exceeded = true; });
             if (exceeded) { gameOverTimer++; if (gameOverTimer > 180) { gameActive = false; alert("GAME OVER! SCORE: " + score); setTimeout(saveAndReset, 500); } } else gameOverTimer = 0;
         }
 
         function draw() {
-            ctx.clearRect(0, 0, W, H); ctx.save(); ctx.shadowBlur = 10; ctx.lineWidth = 3; ctx.setLineDash([10, 5]);
+            ctx.clearRect(0, 0, W, H);
+            particles.forEach(p => {
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+            ctx.save(); ctx.shadowBlur = 10; ctx.lineWidth = 3; ctx.setLineDash([10, 5]);
             ctx.shadowColor = gameOverTimer > 0 ? "red" : "var(--neon-pink)"; ctx.strokeStyle = gameOverTimer > 0 ? `rgba(255, 0, 0, ${0.4 + Math.sin(Date.now() / 100) * 0.4})` : "rgba(255, 113, 206, 0.6)";
             ctx.beginPath(); ctx.moveTo(0, DEADLINE_Y); ctx.lineTo(W, DEADLINE_Y); ctx.stroke(); ctx.restore();
+            
             if (gameOverTimer > 0) { ctx.fillStyle = "white"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center"; ctx.fillText(`${(3 - gameOverTimer / 60).toFixed(1)}s`, W / 2, DEADLINE_Y - 20); }
-            if (!isDropping && gameActive) { ctx.save(); ctx.font = `${fruitTypes[currentType].r * 1.5}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(fruitTypes[currentType].emoji, currentX, 40); ctx.restore(); }
-            fruits.forEach(f => { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.angle); if (f.glow > 0.05) { ctx.shadowBlur = 18 * f.glow; ctx.shadowColor = "white"; } ctx.scale(f.scale * f.poyo, f.scale * (2 - f.poyo)); ctx.font = `${f.r * 1.8}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(fruitTypes[f.type].emoji, 0, 0); ctx.restore(); });
+            if (!isDropping && gameActive) { 
+                ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = "white";
+                ctx.font = `${fruitTypes[currentType].r * 1.5}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                ctx.fillText(fruitTypes[currentType].emoji, currentX, 40); ctx.restore(); 
+            }
+            fruits.forEach(f => { 
+                ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.angle); 
+                if (f.glow > 0.1) { ctx.shadowBlur = 20 * f.glow; ctx.shadowColor = "white"; }
+                ctx.scale(f.scale * f.poyo, f.scale * (2 - f.poyo)); 
+                ctx.font = `${f.r * 1.8}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                ctx.fillText(fruitTypes[f.type].emoji, 0, 0); ctx.restore(); 
+            });
         }
         function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
         function saveAndReset() { AudioEngine.init(); if (confirm("スコアを登録しますか？")) { const name = prompt("名前", "PLAYER"); if (name) { let r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]'); r.push({name, score}); r.sort((a,b)=>b.score-a.score); localStorage.setItem(RANK_KEY, JSON.stringify(r.slice(0,5))); init(); } } else { if (confirm("登録せずにリセットしますか？")) init(); } }

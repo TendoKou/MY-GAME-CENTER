@@ -14,7 +14,6 @@
             display: flex; flex-direction: column; align-items: center; 
             justify-content: center; 
             margin: 0; padding: 0; 
-
             min-height: 100dvh; width: 100vw; overflow: hidden; touch-action: manipulation;
         }
         .bg-lines {
@@ -27,7 +26,6 @@
         
         .header-container { 
             display: flex; align-items: center; justify-content: center; 
-
             padding: 10px 0; width: 100%; gap: 15px; 
         }
         h1 { font-size: clamp(18px, 4.5vw, 24px); color: var(--v-pink); text-shadow: 0 0 10px var(--v-pink); margin: 0; font-style: italic; letter-spacing: 2px; }
@@ -43,7 +41,7 @@
         .cell.active-turn { background: rgba(255, 255, 255, 0.25); box-shadow: inset 0 0 10px rgba(255,255,255,0.5); }
         
         #line-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
-        .piece { width: 12px; height: 12px; border-radius: 50%; position: absolute; transition: all 0.4s ease; z-index: 10; border: 1.5px solid white; box-shadow: 0 0 8px currentColor; }
+        .piece { width: 14px; height: 14px; border-radius: 50%; position: absolute; transition: all 0.4s ease; z-index: 10; border: 1.5px solid white; box-shadow: 0 0 8px currentColor; opacity: 0.85; }
         
         #overlay { position: fixed; inset: 0; background: rgba(10,10,26,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .player-setup { display: flex; flex-direction: column; gap: 8px; margin: 15px 0; width: 100%; max-width: 320px; }
@@ -71,7 +69,7 @@
         </div>
         <div style="font-size:13px; color:var(--v-blue); margin-bottom:10px;">参加プレイヤーを選択</div>
         <div class="player-setup" id="setup-list"></div>
-        <button class="start-btn" onclick="startGame()">ゲーム開始！</button>
+        <button class="start-btn" onclick="handleButtonClick(); startGame()">ゲーム開始！</button>
     </div>
 
     <div class="header-container">
@@ -80,9 +78,8 @@
     </div>
 
     <div class="rule-guide">
-    <span class="rule-snake">●<ruby>蛇<rt>へび</rt></ruby>：<ruby>戻<rt>もど</rt></ruby>る</span>　
-    <span class="rule-ladder">●<ruby>梯子<rt>はしご</rt></ruby>：<ruby>進<rt>すす</rt></ruby>む</span>
-</div>
+        <span class="rule-snake">●<ruby>蛇<rt>へび</rt></ruby>：<ruby>戻<rt>もど</rt></ruby>る</span>　
+        <span class="rule-ladder">●<ruby>梯子<rt>はしご</rt></ruby>：<ruby>進<rt>すす</rt></ruby>む</span>
     </div>
 
     <div class="game-container">
@@ -94,24 +91,23 @@
     <div id="status" style="font-size:13px; height:18px; margin-bottom:5px; font-weight:bold;"></div>
     
     <div class="control-panel">
-    <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="showRanking()">RANKING</button>
-    <button id="roll-btn" class="btn" style="flex: 2; border-color:var(--v-yellow); color:var(--v-yellow); font-size:14px;" onclick="handleRoll()">
-        <ruby> サイコロ</rt></ruby>を<ruby>振<rt>ふ</rt></ruby>る🎲
-    </button>
-    <button id="title-btn" class="btn" style="border-color:var(--v-purple); color:var(--v-purple); display:none;" onclick="backToTitle()">TITLE</button>
-    <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="backToMenu()">MENU</button>
-</div>
+        <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="handleButtonClick(); showRanking()">RANKING</button>
+        <button id="roll-btn" class="btn" style="flex: 2; border-color:var(--v-yellow); color:var(--v-yellow); font-size:14px;" onclick="handleRoll()">
+            <ruby>サイコロ</ruby>を<ruby>振る</ruby>🎲
+        </button>
+        <button id="title-btn" class="btn" style="border-color:var(--v-purple); color:var(--v-purple); display:none;" onclick="handleButtonClick(); backToTitle()">TITLE</button>
+        <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="handleButtonClick(); backToMenu()">MENU</button>
+    </div>
 
     <div id="ranking-modal">
         <div class="modal-content">
             <h2 style="color:var(--v-pink); text-align:center; margin-top:0; font-size:18px;">ベストスコア</h2>
             <div id="ranking-list" style="font-size:12px; line-height:1.6;"></div>
-            <button class="btn" style="width:100%; margin-top:15px; background:var(--v-blue); color:#000;" onclick="closeRanking()">閉じる</button>
+            <button class="btn" style="width:100%; margin-top:15px; background:var(--v-blue); color:#000;" onclick="handleButtonClick(); closeRanking()">閉じる</button>
         </div>
     </div>
 
 <script>
-
 const RANK_KEY = 'neon_snakes_v5_final';
 const SOUND_KEY = 'v_snd_muted';
 const pColors = ['#fffb96', '#b967ff', '#01cdfe', '#ff9a00'];
@@ -120,7 +116,6 @@ let snakes = {}, ladders = {}, playerPos = [], turnCount = [], isCPUs = [], turn
 const AudioEngine = {
     ctx: null, 
     isMuted: localStorage.getItem(SOUND_KEY) === 'true', 
-    isBGMPlaying: false,
     init() {
         if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         if (this.ctx.state === 'suspended' && !this.isMuted) this.ctx.resume();
@@ -150,25 +145,16 @@ const AudioEngine = {
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
         if (slide !== 0) osc.frequency.exponentialRampToValueAtTime(freq + slide, this.ctx.currentTime + dur);
-        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol * 0.4, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + dur);
         osc.connect(gain); gain.connect(this.ctx.destination);
         osc.start(); osc.stop(this.ctx.currentTime + dur);
-    },
-    startBGM() {
-        if (this.isBGMPlaying) return;
-        this.init();
-        this.isBGMPlaying = true;
-        let step = 0;
-        const melody = [110, 0, 146, 0, 110, 164, 110, 98];
-        setInterval(() => {
-            if (!this.ctx || this.isMuted) return;
-            const freq = melody[step % melody.length];
-            if (freq > 0) this.playTone(freq, 'sine', 0.8, 0.02);
-            step++;
-        }, 600);
     }
 };
+
+function handleButtonClick() {
+    AudioEngine.playTone(700, 'sine', 0.05, 0.04);
+}
 
 function initSetup() {
     const list = document.getElementById('setup-list');
@@ -178,11 +164,11 @@ function initSetup() {
         row.className = 'player-row';
         row.innerHTML = `
             <span style="color:${pColors[i]}; font-weight:bold; font-size:14px;">P${i+1}</span>
-            <button id="p${i}-h" class="btn ${i===0?'active':''}" onclick="setPlayerType(${i}, 'human')">
+            <button id="p${i}-h" class="btn ${i===0?'active':''}" onclick="handleButtonClick(); setPlayerType(${i}, 'human')">
                 <ruby>人間<rt>にんげん</rt></ruby>
             </button>
-            <button id="p${i}-c" class="btn btn-cpu ${i===1?'active':''}" onclick="setPlayerType(${i}, 'cpu')">CPU</button>
-            <button id="p${i}-off" class="btn ${i>1?'active':''}" onclick="setPlayerType(${i}, 'off')">
+            <button id="p${i}-c" class="btn btn-cpu ${i===1?'active':''}" onclick="handleButtonClick(); setPlayerType(${i}, 'cpu')">CPU</button>
+            <button id="p${i}-off" class="btn ${i>1?'active':''}" onclick="handleButtonClick(); setPlayerType(${i}, 'off')">
                 <ruby>不参加<rt>ふさんか</rt></ruby>
             </button>
         `;
@@ -193,7 +179,6 @@ function initSetup() {
 
 let playerSettings = ['human', 'cpu', 'off', 'off'];
 function setPlayerType(idx, type) {
-    AudioEngine.playTone(440, 'sine', 0.05, 0.05);
     playerSettings[idx] = type;
     document.getElementById(`p${idx}-h`).className = 'btn ' + (type==='human'?'active':'');
     document.getElementById(`p${idx}-c`).className = 'btn btn-cpu ' + (type==='cpu'?'active':'');
@@ -214,7 +199,6 @@ function backToTitle() {
 
 function startGame() {
     AudioEngine.init();
-    AudioEngine.startBGM();
     activeIndices = playerSettings.map((s, i) => s !== 'off' ? i : -1).filter(i => i !== -1);
     if(activeIndices.length < 2) { alert("2人以上選んでください"); return; }
     playerPos = activeIndices.map(() => 1);
@@ -259,29 +243,71 @@ function generateMap() {
 }
 
 function drawLines() {
-    const canvas = document.getElementById('line-canvas'); const container = document.querySelector('.game-container');
+    const canvas = document.getElementById('line-canvas'); 
+    const container = document.querySelector('.game-container');
     canvas.width = container.clientWidth; canvas.height = container.clientHeight;
     const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
-    const draw = (obj, col) => {
-        ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.setLineDash([5, 5]);
-        for (let s in obj) {
-            const sEl = document.getElementById('cell-' + s), eEl = document.getElementById('cell-' + obj[s]);
-            if(!sEl || !eEl) continue;
-            const x1 = sEl.offsetLeft + sEl.offsetWidth/2, y1 = sEl.offsetTop + sEl.offsetHeight/2;
-            const x2 = eEl.offsetLeft + eEl.offsetWidth/2, y2 = eEl.offsetTop + eEl.offsetHeight/2;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(x1+(x2-x1)/2+(Math.random()-0.5)*50, y1+(y2-y1)/2, x2, y2); ctx.stroke();
+
+    for (let s in snakes) {
+        const sEl = document.getElementById('cell-' + s), eEl = document.getElementById('cell-' + snakes[s]);
+        if(!sEl || !eEl) continue;
+        const x1 = sEl.offsetLeft + sEl.offsetWidth/2, y1 = sEl.offsetTop + sEl.offsetHeight/2;
+        const x2 = eEl.offsetLeft + eEl.offsetWidth/2, y2 = eEl.offsetTop + eEl.offsetHeight/2;
+        
+        ctx.strokeStyle = 'rgba(255, 113, 206, 0.8)';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.setLineDash([]);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        const cp1x = x1 + (x2 - x1) * 0.3 + 30, cp1y = y1 + (y2 - y1) * 0.3;
+        const cp2x = x1 + (x2 - x1) * 0.7 - 30, cp2y = y1 + (y2 - y1) * 0.7;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+    }
+
+    for (let l in ladders) {
+        const sEl = document.getElementById('cell-' + l), eEl = document.getElementById('cell-' + ladders[l]);
+        if(!sEl || !eEl) continue;
+        const x1 = sEl.offsetLeft + sEl.offsetWidth/2, y1 = sEl.offsetTop + sEl.offsetHeight/2;
+        const x2 = eEl.offsetLeft + eEl.offsetWidth/2, y2 = eEl.offsetTop + eEl.offsetHeight/2;
+
+        ctx.strokeStyle = 'rgba(5, 255, 161, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([]);
+        
+        const dx = x2 - x1, dy = y2 - y1;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const nx = -dy / dist * 6, ny = dx / dist * 6;
+
+        ctx.beginPath();
+        ctx.moveTo(x1 + nx, y1 + ny); ctx.lineTo(x2 + nx, y2 + ny);
+        ctx.moveTo(x1 - nx, y1 - ny); ctx.lineTo(x2 - nx, y2 - ny);
+        ctx.stroke();
+
+        const steps = 6;
+        for (let i = 1; i < steps; i++) {
+            const tx = x1 + (dx * (i / steps)), ty = y1 + (dy * (i / steps));
+            ctx.beginPath();
+            ctx.moveTo(tx + nx, ty + ny); ctx.lineTo(tx - nx, ty - ny);
+            ctx.stroke();
         }
-    };
-    draw(snakes, 'rgba(255, 113, 206, 0.6)'); draw(ladders, 'rgba(5, 255, 161, 0.6)');
+    }
 }
 
 function updateUI() {
     playerPos.forEach((pos, i) => {
         const p = document.getElementById('p' + i); const cell = document.getElementById('cell-' + pos);
         if(!cell || !p) return;
-        const offsets = [[-5,-5], [5,-5], [-5,5], [5,5]];
-        p.style.left = (cell.offsetLeft + cell.offsetWidth/2 - 5 + offsets[i][0]) + 'px';
-        p.style.top = (cell.offsetTop + cell.offsetHeight/2 - 5 + offsets[i][1]) + 'px';
+        const offsets = [[-7,-7], [7,-7], [-7,7], [7,7]];
+        p.style.left = (cell.offsetLeft + cell.offsetWidth/2 - 7 + offsets[i][0]) + 'px';
+        p.style.top = (cell.offsetTop + cell.offsetHeight/2 - 7 + offsets[i][1]) + 'px';
     });
 }
 
@@ -297,6 +323,7 @@ function updateStatus() {
 
 async function handleRoll() {
     if (isMoving) return; isMoving = true;
+    handleButtonClick();
     AudioEngine.init();
     document.getElementById('roll-btn').disabled = true;
     turnCount[turn]++;
@@ -304,14 +331,14 @@ async function handleRoll() {
     for(let i=0; i<8; i++) { 
         roll = Math.floor(Math.random()*6)+1; 
         document.getElementById('dice-view').innerText = roll;
-        AudioEngine.playTone(600 + (i*50), 'sine', 0.05, 0.03);
+        AudioEngine.playTone(600 + (i*50), 'sine', 0.05, 0.04);
         await new Promise(r=>setTimeout(r,60)); 
     }
-    AudioEngine.playTone(440, 'triangle', 0.1, 0.08);
+    AudioEngine.playTone(440, 'sine', 0.1, 0.04);
     for (let i = 0; i < roll; i++) {
         if (playerPos[turn] >= 100) break;
         playerPos[turn]++; updateUI(); 
-        AudioEngine.playTone(220, 'sine', 0.08, 0.05);
+        AudioEngine.playTone(220, 'sine', 0.08, 0.03);
         await new Promise(r=>setTimeout(r,180));
     }
     const jumpS = snakes[playerPos[turn]], jumpL = ladders[playerPos[turn]];
@@ -319,17 +346,17 @@ async function handleRoll() {
         await new Promise(r=>setTimeout(r,400));
         if (jumpS) {
             playerPos[turn] = jumpS;
-            AudioEngine.playTone(300, 'sawtooth', 0.5, 0.05, -150);
+            AudioEngine.playTone(200, 'sawtooth', 0.5, 0.04, -100);
         } else {
             playerPos[turn] = jumpL;
-            AudioEngine.playTone(523, 'sine', 0.1, 0.05);
-            setTimeout(()=>AudioEngine.playTone(659, 'sine', 0.1, 0.05), 100);
-            setTimeout(()=>AudioEngine.playTone(783, 'sine', 0.2, 0.05), 200);
+            AudioEngine.playTone(523, 'sine', 0.1, 0.04);
+            setTimeout(()=>AudioEngine.playTone(659, 'sine', 0.1, 0.04), 100);
+            setTimeout(()=>AudioEngine.playTone(783, 'sine', 0.2, 0.04), 200);
         }
         updateUI(); await new Promise(r=>setTimeout(r,500));
     }
     if (playerPos[turn] >= 100) {
-        AudioEngine.playTone(880, 'square', 0.5, 0.1);
+        AudioEngine.playTone(880, 'square', 0.5, 0.06);
         const title = turnCount[turn] <= 15 ? "梯子上りの達人" : turnCount[turn] <= 20 ? "蛇避けのプロ" : "不屈の冒険家";
         alert(`PLAYER ${activeIndices[turn]+1} の勝利！\n【${turnCount[turn]}手：${title}】`);
         if(!isCPUs[turn]) saveScore("P"+(activeIndices[turn]+1), turnCount[turn], title);
@@ -349,7 +376,6 @@ function saveScore(name, turns, title) {
 }
 
 function showRanking() {
-    AudioEngine.playTone(440, 'sine', 0.05, 0.05);
     const r = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
     document.getElementById('ranking-list').innerHTML = r.length ? r.map((d, i)=>`
         <div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px;">

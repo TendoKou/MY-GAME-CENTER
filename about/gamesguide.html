@@ -346,13 +346,23 @@
                 
                 setTimeout(() => {
                     window.location.href = targetUrl;
+                    
+                    setTimeout(() => {
+                        wipe.classList.remove('active');
+                    }, 500);
                 }, 500);
             });
         });
 
-console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
-            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
-            "color: #01cdfe; font-size: 14px;");</script>
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                wipe.classList.remove('active');
+            }
+        });
+
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+                    "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+                    "color: #01cdfe; font-size: 14px;");
     </script>
 </body>
 </html>
