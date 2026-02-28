@@ -20,6 +20,17 @@
     <link rel="apple-touch-icon" href="OURGAMES.png">
     <link rel="icon" type="image/png" href="OURGAMES.png">
 
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('オフライン機能準備完了！'))
+            .catch(err => console.log('準備失敗', err));
+        });
+      }
+
+    </script>
+
    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>MY GAME CENTER</title>
@@ -31,17 +42,6 @@
     <link rel="apple-touch-icon" href="OURGAMES.png">
     <link rel="icon" type="image/png" href="OURGAMES.png">
 
-        <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('オフライン機能準備完了！'))
-            .catch(err => console.log('準備失敗', err));
-        });
-      }
-            
-    </script>
-    
     <style>
         :root {
             --v-pink: #ff71ce;
