@@ -261,9 +261,9 @@
             const j = board[r][c]; if(!j) return false;
             let h=1, v=1;
             for(let i=c-1; i>=0 && board[r][i]?.type===j.type; i--) h++;
-            for(let i=c+1; i<SIZE && board[r][i]?.type===j.type; i--) h++;
+            for(let i=c+1; i<SIZE && board[r][i]?.type===j.type; i++) h++;
             for(let i=r-1; i>=0 && board[i][c]?.type===j.type; i--) v++;
-            for(let i=r+1; i<SIZE && board[i][c]?.type===j.type; i--) v++;
+            for(let i=r+1; i<SIZE && board[i][c]?.type===j.type; i++) v++;
             return h>=3 || v>=3;
         }
 
@@ -307,7 +307,12 @@
             a.r = br; a.c = bc; b.r = ar; b.c = ac;
             updatePositions();
             await new Promise(r => setTimeout(r, 200));
-            if(a.special || b.special) { if(a.special) triggerSpecial(a); if(b.special) triggerSpecial(b); fillGaps(); return; }
+            if(a.special || b.special) { 
+                if(a.special) triggerSpecial(a); 
+                if(b.special) triggerSpecial(b); 
+                fillGaps(); 
+                return; 
+            }
             if(!checkMatches(false, {r: br, c: bc})) {
                 board[ar][ac] = a; board[br][bc] = b;
                 a.r = ar; a.c = ac; b.r = br; b.c = bc;
@@ -465,12 +470,10 @@
         function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
 
         function titleAction() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.01); 
             if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); 
         }
         
         function backToMenu() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.01);
             if(confirm("ゲームを終了してメインページに戻りますか？")) { 
                 if (window.history.length > 1) window.history.back(); 
                 else location.href = '../index.html'; 
@@ -495,8 +498,6 @@
             AudioEngine.isMuted = (localStorage.getItem('v_snd_muted') === 'true');
             AudioEngine.updateIcons();
         });
-
-        init();
 
         console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
                     "color: #ff71ce; font-size: 20px; font-weight: bold;", 
