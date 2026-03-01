@@ -552,11 +552,16 @@ const AudioEngine = {
         this.syncMuteState();
     },
 
-    syncMuteState() {
+    syncMuteState(isFast = false) {
         if (!this.masterGain) return;
         this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
         this.updateButton();
-        this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : 0.15, this.ctx.currentTime, 0.1);
+        const targetVol = this.isMuted ? 0 : 0.15;
+        if (isFast) {
+            this.masterGain.gain.setValueAtTime(targetVol, this.ctx.currentTime);
+        } else {
+            this.masterGain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.1);
+        }
     },
 
     updateButton() {
@@ -571,7 +576,7 @@ const AudioEngine = {
     },
 
     playHover() {
-        if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
+        if (!this.ctx || this.isMuted || document.hidden) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
@@ -586,7 +591,7 @@ const AudioEngine = {
 
     playClick(callback) {
         this.init().then(() => {
-            if (this.isMuted) {
+            if (this.isMuted || document.hidden) {
                 if(callback) callback();
                 return;
             }
@@ -594,15 +599,13 @@ const AudioEngine = {
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-            
             gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
             gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
-            
             osc.connect(gain); 
             gain.connect(this.masterGain);
             osc.start(); 
             osc.stop(this.ctx.currentTime + 0.2);
-            if(callback) setTimeout(callback, 250);
+            if(callback) setTimeout(callback, 100);
         });
     },
 
@@ -612,7 +615,7 @@ const AudioEngine = {
         let step = 0;
         const melody = [523, 587, 659, 783, 880, 783, 659, 587]; 
         const playStep = () => {
-            if (!this.isMuted && this.ctx && this.ctx.state === 'running') {
+            if (!this.isMuted && this.ctx && !document.hidden && this.ctx.state === 'running') {
                 const freq = melody[step % melody.length];
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
@@ -638,17 +641,9 @@ const canvas = document.getElementById('draw-canvas');
 const container = document.getElementById('canvas-container');
 const ctx = canvas.getContext('2d');
 let isDrawing = false;
-let startX, startY;
-let snapshot;
-let undoStack = [];
-let redoStack = [];
-
-let currentSettings = {
-    color: '#05ffa1',
-    bgColor: '#000000',
-    tool: 'pen',
-    lineWidth: 5
-};
+let startX, startY, snapshot;
+let undoStack = [], redoStack = [];
+let currentSettings = { color: '#05ffa1', bgColor: '#000000', tool: 'pen', lineWidth: 5 };
 
 function resizeCanvas() {
     const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.55);
@@ -663,7 +658,6 @@ function applyDrawingStyles() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.lineWidth = currentSettings.lineWidth;
-
     if (currentSettings.tool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.strokeStyle = 'rgba(0,0,0,1)';
@@ -672,20 +666,14 @@ function applyDrawingStyles() {
     } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = currentSettings.color;
-        if (currentSettings.color === '#000000') {
-            ctx.shadowBlur = 0;
-            ctx.shadowColor = 'transparent';
-        } else {
-            ctx.shadowBlur = currentSettings.lineWidth * 2;
-            ctx.shadowColor = currentSettings.color;
-        }
+        ctx.shadowBlur = (currentSettings.color === '#000000') ? 0 : currentSettings.lineWidth * 2;
+        ctx.shadowColor = currentSettings.color;
     }
 }
 
 function setNeonColor(color, el) {
     currentSettings.color = color;
     if (currentSettings.tool === 'eraser') setTool('pen');
-
     el.closest('.control-group').querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     applyDrawingStyles();
@@ -695,23 +683,15 @@ function setCanvasBg(color, el) {
     AudioEngine.playClick();
     currentSettings.bgColor = color;
     container.style.background = color;
-    if (color === 'transparent') {
-        container.classList.add('bg-trans');
-    } else {
-        container.classList.remove('bg-trans');
-    }
+    if (color === 'transparent') container.classList.add('bg-trans');
+    else container.classList.remove('bg-trans');
     document.querySelectorAll('#bg-controls .color-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
 }
 
 function toggleHandedness() {
     AudioEngine.playClick();
-    const wrapper = document.getElementById('controls-wrapper');
-    wrapper.classList.toggle('left-handed');
-    const isLeft = wrapper.classList.contains('left-handed');
-
-    const msg = isLeft ? "♻️" : "♻️";
-    console.log(msg);
+    document.getElementById('controls-wrapper').classList.toggle('left-handed');
 }
 
 function setLineWidth(val) {
@@ -789,7 +769,7 @@ function startDrawing(e) {
 
 function draw(e) {
     if (!isDrawing) return;
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const pos = getPos(e);
     if (currentSettings.tool === 'pen' || currentSettings.tool === 'eraser') {
         ctx.lineTo(pos.x, pos.y);
@@ -832,18 +812,25 @@ function openDraw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         saveState();
     }
-    canvas.onmousedown = startDrawing;
-    window.onmousemove = draw;
-    window.onmouseup = stopDrawing;
-    canvas.ontouchstart = startDrawing;
-    canvas.ontouchmove = draw;
-    canvas.ontouchend = stopDrawing;
+    canvas.addEventListener('mousedown', startDrawing);
+    window.addEventListener('mousemove', draw, { passive: false });
+    window.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    window.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
 }
 
 function closeDraw() {
     if(confirm("お絵描きを終わりますか？")) {
-        AudioEngine.playClick();
-        document.getElementById('draw-modal').style.display = 'none';
+        AudioEngine.playClick(() => {
+            document.getElementById('draw-modal').style.display = 'none';
+            canvas.removeEventListener('mousedown', startDrawing);
+            window.removeEventListener('mousemove', draw);
+            window.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('touchstart', startDrawing);
+            window.removeEventListener('touchmove', draw);
+            window.removeEventListener('touchend', stopDrawing);
+        });
     }
 }
 
@@ -855,15 +842,22 @@ document.addEventListener('DOMContentLoaded', () => {
     AudioEngine.updateButton();
     document.getElementById('sound-toggle').addEventListener('click', (e) => {
         e.stopPropagation();
-        AudioEngine.init();
-        AudioEngine.toggleMute();
+        AudioEngine.init().then(() => AudioEngine.toggleMute());
     });
-    
+
+    const clearFlashes = () => {
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.classList.remove('flash-active');
+        });
+    };
+
     window.addEventListener('pageshow', (event) => {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            document.querySelectorAll('.game-card').forEach(card => {
-                card.classList.remove('flash-active');
-            });
+        clearFlashes();
+        if (AudioEngine.ctx) {
+            AudioEngine.syncMuteState(true);
+            if (AudioEngine.ctx.state === 'suspended' && !AudioEngine.isMuted) {
+                AudioEngine.ctx.resume();
+            }
         }
     });
 
@@ -872,17 +866,21 @@ document.addEventListener('DOMContentLoaded', () => {
         card.addEventListener('mouseenter', () => AudioEngine.playHover());
         card.addEventListener('click', (e) => {
             e.preventDefault();
+            if(card.classList.contains('flash-active')) return;
             card.classList.add('flash-active');
-            const handleAction = () => {
+            AudioEngine.playClick(() => {
                 if(card.id === 'draw-menu-card') {
                     openDraw();
                     card.classList.remove('flash-active');
                 } else {
                     const url = card.getAttribute('href');
-                    if (url) window.location.href = url;
+                    if (url) {
+                        setTimeout(() => { window.location.href = url; }, 150);
+                    } else {
+                        setTimeout(() => { card.classList.remove('flash-active'); }, 1000);
+                    }
                 }
-            };
-            AudioEngine.playClick(handleAction);
+            });
         });
     });
 });
