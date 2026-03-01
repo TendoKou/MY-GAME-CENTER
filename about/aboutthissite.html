@@ -152,58 +152,37 @@
     </div>
     <script>
         const AudioEngine = {
-            ctx: null,
-            play(freq, type, vol, duration) {
-                try {
-                    const muted = localStorage.getItem('v_snd_muted') === 'true';
-                    if (muted) return;
-                    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + duration);
-                } catch(e) {}
-            },
-            syncMuteState() {
-                this.updateButton();
-            },
-            updateButton() {
-                const btn = document.getElementById('sound-toggle');
-                if (!btn) return;
-                const muted = localStorage.getItem('v_snd_muted') === 'true';
-                btn.textContent = muted ? '🔇' : '🔊';
-            }
-        };
+    ctx: null,
+    syncMuteState() {
+        this.updateButton();
+    },
+    updateButton() {
+        const btn = document.getElementById('sound-toggle');
+        if (!btn) return;
+        const muted = localStorage.getItem('v_snd_muted') === 'true';
+        btn.textContent = muted ? '🔇' : '🔊';
+    }
+};
 
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'v_snd_muted') {
-                AudioEngine.syncMuteState();
-            }
-        });
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') {
+        AudioEngine.syncMuteState();
+    }
+});
 
-        window.addEventListener('pageshow', (event) => {
-            AudioEngine.syncMuteState();
-        });
+window.addEventListener('pageshow', (event) => {
+    AudioEngine.syncMuteState();
+});
 
-        function backToMenu() { 
-            AudioEngine.play(440, 'sine', 0.1, 0.05);
-            
-            console.log("%cSYSTEM: %cP≪ BACK TO MENU %c[OK]", "color: var(--v-blue);", "color: #eee;", "color: var(--v-cyan);");
-            
-            setTimeout(() => {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    location.href = 'index.html'; 
-                }
-            }, 100);
+function backToMenu() { 
+    setTimeout(() => {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            location.href = 'index.html'; 
         }
+    }, 50);
+}
 
         console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
                     "color: #ff71ce; font-size: 20px; font-weight: bold;", 
