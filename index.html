@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:title" content="MY GAME CENTER">
+    <meta property="og:description" content="ミニゲーム倉庫">
+    <meta property="og:image" content="https://tendokou.github.io/MY-GAME-CENTER/MY-GAME-CENTER.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tendokou.github.io/MY-GAME-CENTER/">
+
+    <title>MY GAME CENTER</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="apple-touch-icon" href="OURGAMES.png">
+    <link rel="icon" type="image/png" href="OURGAMES.png">
+    
+    <link rel="vcs-git" href="https://github.com/TendoKou/MY-GAME-CENTER">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('オフライン機能準備完了！'))
+            .catch(err => console.log('準備失敗', err));
+        });
+      }
+
+    </script>
+
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MY GAME CENTER</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="apple-touch-icon" href="OURGAMES.png">
+    <link rel="icon" type="image/png" href="OURGAMES.png">
+
+    <style>
+        :root {
+            --v-pink: #ff71ce;
+            --v-blue: #01cdfe;
+            --v-purple: #b967ff;
+            --v-cyan: #05ffa1;
+            --v-yellow: #fffb96;
+            --v-orange: #ff9d00;
+            --bg-dark: #241734;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: white; 
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0;
+            padding: 60px 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #4b0082 0%, #241734 100%);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(var(--v-blue) 1px, transparent 1px),
+                linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(300px) rotateX(60deg);
+            z-index: -1;
+            opacity: 0.3;
+            animation: gridMove 5s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 0 60px; }
+        }
+
+        .statue-bg {
+            position: fixed;
+            top: 20%;
+            left: 10%;
+            font-size: 150px;
+            opacity: 0.2;
+            z-index: -2;
+            filter: drop-shadow(0 0 20px var(--v-pink));
+            animation: rotateStatue 20s linear infinite, float 6s ease-in-out infinite;
+        }
+
+        @keyframes rotateStatue {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { top: 20%; }
+            50% { top: 25%; }
+        }
+
+        h1 { 
+            font-size: clamp(30px, 8vw, 60px); 
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+            background: linear-gradient(to bottom, var(--v-blue) 0%, var(--v-pink) 50%, var(--v-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(4px 4px 0px var(--v-purple));
+            margin: 0;
+            letter-spacing: 10px;
+            text-align: center;
+            transition: transform 0.1s;
+        }
+
+        h1:hover {
+            animation: mini-glitch 0.3s steps(2) infinite;
+            cursor: default;
+        }
+
+        @keyframes mini-glitch {
+            0% { transform: translate(2px, 0); filter: drop-shadow(-2px 2px 0 var(--v-cyan)); }
+            50% { transform: translate(-2px, 0); filter: drop-shadow(2px -2px 0 var(--v-pink)); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .subtitle-container {
+            text-align: center;
+            margin-bottom: 50px;
+            z-index: 10;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(to right, var(--v-pink), var(--v-yellow), var(--v-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .disclaimer {
+            font-size: clamp(11px, 3vw, 13px);
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+            letter-spacing: 0.05em;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto 30px auto;
+        }
+
+        .about-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 40px auto;
+            z-index: 10;
+        }
+
+        .about-card {
+            aspect-ratio: auto !important;
+            height: 60px !important;
+            border-radius: 30px !important;
+            flex-direction: row !important;
+            padding: 0 20px !important;
+        }
+
+        .about-card .icon {
+            font-size: 24px !important;
+            margin-bottom: 0 !important;
+            margin-right: 10px;
+        }
+
+        .about-card .title {
+            text-align: left !important;
+            font-size: 10px !important;
+        }
+
+        .menu-grid {
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: clamp(10px, 3vw, 20px); 
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 10;
+        }
+
+        .game-card {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            background: rgba(22, 22, 37, 0.75); 
+            box-shadow: inset 0 0 15px rgba(1, 205, 254, 0.2);
+            border: 2px solid var(--v-blue);
+            border-radius: clamp(11px, 4vw, 22px);
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            text-decoration: none;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--v-pink);
+            box-shadow: 
+                inset 0 0 20px rgba(255, 113, 206, 0.3),
+                0 0 20px rgba(255, 113, 206, 0.2);
+        }
+
+        .game-card.flash-active {
+            animation: neon-slow-fade 1.5s ease-in-out infinite;
+            z-index: 100;
+        }
+
+        @keyframes neon-slow-fade {
+            0% { border-color: var(--v-cyan); box-shadow: 0 0 20px var(--v-cyan); }
+            50% { border-color: var(--v-pink); box-shadow: 0 0 30px var(--v-pink); }
+            100% { border-color: var(--v-cyan); box-shadow: 0 0 20px var(--v-cyan); }
+        }
+
+        .icon { 
+            font-size: clamp(24px, 7vw, 45px); 
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .icon { transform: scale(1.1); }
+
+        .title { 
+           font-weight: 900; 
+           font-size: clamp(9px, 2.5vw, 11px);
+           text-align: center;
+           padding: 0 4px;
+           line-height: 1.2;
+           color: #000000;
+           letter-spacing: 0.05em;
+           word-break: keep-all;
+           text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 0px 1px 0 #fff, 0px -1px 0 #fff, 1px 0px 0 #fff, -1px 0px 0 #fff;
+        }
+
+        .deco-text {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 40px;
+            color: var(--v-pink);
+            opacity: 0.3;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+        }
+
+        .title small { display: block; margin-top: 5px; color: #000000; }
+
+        .header-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            z-index: 100;
+        }
+
+        #sound-toggle {
+            position: absolute;
+            top: -10px;
+            right: -20px;
+            cursor: pointer;
+            font-size: clamp(20px, 5vw, 28px);
+            filter: drop-shadow(0 0 8px var(--v-cyan));
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+
+        #sound-toggle:active { transform: scale(0.9); }
+
+        @media (max-width: 480px) {
+            #sound-toggle { top: -20px; right: 0px; }
+        }
+
+        #draw-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 26, 0.98);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            backdrop-filter: blur(15px);
+        }
+
+        #canvas-container {
+            position: relative;
+            background: #000000;
+            border: 4px solid var(--v-purple);
+            box-shadow: 0 0 20px rgba(185, 103, 255, 0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            line-height: 0; 
+        }
+
+        #draw-canvas {
+            background: transparent;
+            touch-action: none;
+            max-width: 95vw;
+            max-height: 55vh;
+        }
+
+        .draw-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .left-handed .control-group {
+            flex-direction: row-reverse;
+        }
+
+        .color-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .color-btn.active { transform: scale(1.25); box-shadow: 0 0 10px #fff; }
+
+        .color-btn.bg-trans {
+            background-image: linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px 5px, 5px 0;
+        }
+
+        .tool-btn {
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--v-blue);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tool-btn.active { background: var(--v-blue); color: #000; font-weight: bold; }
+
+        .draw-action-btns {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .draw-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 50px;
+            border: 2px solid;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .draw-btn:active { transform: scale(0.95); }
+        
+        .size-slider {
+            width: 80px;
+            accent-color: var(--v-cyan);
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            font-size: 20px;
+            margin-left: 10px;
+            filter: drop-shadow(0 0 5px var(--v-purple));
+        }
+
+        ruby rt { font-size: 0.6em; }
+    </style>
+</head>
+
+<body>
+
+    <div class="statue-bg">🗿</div>
+    <div class="deco-text">美学 ＡＥＳＴＨＥＴＩＣＳ</div>
+
+    <div class="header-container">
+        <h1>MY GAME CENTER</h1>
+        <div id="sound-toggle">🔊</div>
+    </div>
+    
+    <div class="subtitle-container">
+        <div class="subtitle">～ ようこそ ～</div>
+        <div class="disclaimer"><p>
+    <ruby>当<rt>とう</rt></ruby>サイトの<ruby>制作<rt>せいさく</rt></ruby>にはGeminiを<ruby>使用<rt>しよう</rt></ruby>しております。
+</p></div>
+
+        <div class="about-row">
+            <a href="about/aboutthissite.html" class="game-card about-card" style="border-color: var(--v-cyan);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-cyan));">🌐</div>
+                <div class="title">ＡＢＯＵＴ　<br>ＴＨＩＳ　ＳＩＴＥ<br><small>このサイトについて</small></div>
+            </a>
+            <a href="about/gamesguide.html" class="game-card about-card" style="border-color: var(--v-pink);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-pink));">📖</div>
+                <div class="title">ＧＡＭＥＳ　ＧＵＩＤＥ<br><small>ゲームについて</small></div>
+            </a>
+        </div>
+
+        <div class="menu-grid">
+            <div class="game-card" id="draw-menu-card" style="border-color: var(--v-purple);">
+                <div class="icon" style="filter: drop-shadow(0 0 8px var(--v-purple));">🎨</div>
+                <div class="title">ＮＥＯＮ ＤＲＡＷ<br><small>ネオン・ドロー（お絵描き）</small></div>
+            </div>
+            <a href="games/minesearcher.html" class="game-card">
+                <div class="icon">💣</div>
+                <div class="title">ＭＩＮＥ ＳＥＡＲＣＨＥＲ<br><small>マイン・サーチャー</small></div>
+            </a>
+            <a href="games/pegjump.html" class="game-card">
+                <div class="icon">🟢</div>
+                <div class="title">ＰＥＧ ＪＵＭＰ<br><small>ペグ・ジャンプ</small></div>
+            </a>
+            <a href="games/snakesandladders.html" class="game-card">
+                <div class="icon">🐍🪜</div>
+                <div class="title">ＳＮＡＫＥＳ<br>＆<br>ＬＡＤＤＥＲＳ<br><small>蛇と梯子</small></div>
+            </a>
+            <a href="games/fruitbounceharvest.html" class="game-card">
+                <div class="icon">🍎</div>
+                <div class="title">ＦＲＵＩＴ ＢＯＵＮＣＥ<br><small>ＨＡＲＶＥＳＴ<br>フルーツ・バウンス・ハーベスト</small></div>
+            </a>
+            <a href="games/neonblockpuzzle.html" class="game-card">
+                <div class="icon">🧩</div>
+                <div class="title">ＮＥＯＮ ＢＬＯＣＫ ＰUZＺＬＥ<br><small>ネオン・ブロック・パズル</small></div>
+            </a>
+            <a href="games/neonjewelslide.html" class="game-card">
+                <div class="icon">💎</div>
+                <div class="title">ＮＥＯＮ ＪＥＷＥＬ ＳＬＩＤＥ<br><small>ネオン・ジュエル・スライド</small></div>
+            </a>
+            <div class="game-card">
+                <div class="icon">❓</div>
+                <div class="title">Ｃｏｍｉｎｇ Ｓｏｏｎ...<br><small>準備中</small></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="draw-modal">
+        <div style="display:flex; align-items:center; margin-bottom:10px;">
+            <h2 style="color:var(--v-purple); text-shadow:0 0 10px var(--v-purple); font-size: 1.2rem; margin:0;">ネオン・ドロー</h2>
+            <span class="settings-icon" onclick="toggleHandedness()" title="左利き/右利き切替">🔄</span>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="draw-canvas"></canvas>
+        </div>
+        
+        <div class="draw-controls" id="controls-wrapper">
+            <div class="control-group">
+                <div id="bg-controls" style="display:flex; gap:8px; align-items:center; border-right:1px solid rgba(255,255,255,0.2); padding-right:10px;">
+                    <span style="font-size:10px; color:var(--v-pink);">はいけい</span>
+                    <div class="color-btn active" style="background: #000000; border-color:var(--v-purple);" onclick="setCanvasBg('#000000', this)"></div>
+                    <div class="color-btn" style="background: #ffffff; border-color:var(--v-purple);" onclick="setCanvasBg('#ffffff', this)"></div>
+                    <div class="color-btn bg-trans" style="border-color:var(--v-purple);" onclick="setCanvasBg('transparent', this)"></div>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span style="font-size:10px; color:var(--v-cyan);">いろ</span>
+                    <div class="color-btn active" style="background: var(--v-cyan);" onclick="setNeonColor('#05ffa1', this)"></div>
+                    <div class="color-btn" style="background: var(--v-pink);" onclick="setNeonColor('#ff71ce', this)"></div>
+                    <div class="color-btn" style="background: var(--v-blue);" onclick="setNeonColor('#01cdfe', this)"></div>
+                    <div class="color-btn" style="background: #ffffff;" onclick="setNeonColor('#ffffff', this)"></div>
+                    <div class="color-btn" style="background: #000000;" onclick="setNeonColor('#000000', this)"></div>
+                    <input type="range" class="size-slider" min="1" max="40" value="5" oninput="setLineWidth(this.value)">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">✏️ <ruby>自由<rt>じゆう</rt></ruby></button>
+                <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">🧼 <ruby>消<rt>け</rt></ruby>しゴム</button>
+                <button class="tool-btn" id="tool-rect" onclick="setTool('rect')">□ <ruby>四角<rt>しかく</rt></ruby></button>
+                <button class="tool-btn" id="tool-circle" onclick="setTool('circle')">○ <ruby>丸<rt>まる</rt></ruby></button>
+                <button class="tool-btn" onclick="undo()">↩️</button>
+                <button class="tool-btn" onclick="redo()">↪️</button>
+            </div>
+
+            <div class="draw-action-btns">
+                <button class="draw-btn" style="border-color:var(--v-cyan); color:var(--v-cyan);" onclick="saveAsImage()">
+                    💾 <ruby>保存<rt>ほぞん</rt></ruby>
+                </button>
+                <button class="draw-btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="clearCanvas()">
+                    🗑️ <ruby>消去<rt>しょうきょ</rt></ruby>
+                </button>
+                <button class="draw-btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="closeDraw()">
+                    ❌ <ruby>閉<rt>と</rt></ruby>じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const AudioEngine = {
+    ctx: null,
+    masterGain: null,
+    isMuted: localStorage.getItem('v_snd_muted') === 'true',
+    isBGMPlaying: false,
+    
+    async init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === 'suspended') {
+            await this.ctx.resume();
+        }
+        this.syncMuteState();
+    },
+
+    syncMuteState(isFast = false) {
+        if (!this.masterGain) return;
+        this.isMuted = localStorage.getItem('v_snd_muted') === 'true';
+        this.updateButton();
+        const targetVol = this.isMuted ? 0 : 0.15;
+        if (isFast) {
+            this.masterGain.gain.setValueAtTime(targetVol, this.ctx.currentTime);
+        } else {
+            this.masterGain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.1);
+        }
+    },
+
+    updateButton() {
+        const btn = document.getElementById('sound-toggle');
+        if (btn) btn.innerText = this.isMuted ? '🔇' : '🔊';
+    },
+
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem('v_snd_muted', this.isMuted);
+        this.syncMuteState();
+    },
+
+    playHover() {
+        if (!this.ctx || this.isMuted || document.hidden) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.connect(gain); 
+        gain.connect(this.masterGain);
+        osc.start(); 
+        osc.stop(this.ctx.currentTime + 0.1);
+    },
+
+    playClick(callback) {
+        this.init().then(() => {
+            if (this.isMuted || document.hidden) {
+                if(callback) callback();
+                return;
+            }
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+            osc.connect(gain); 
+            gain.connect(this.masterGain);
+            osc.start(); 
+            osc.stop(this.ctx.currentTime + 0.2);
+            if(callback) setTimeout(callback, 100);
+        });
+    },
+
+    startBGM() {
+        if (this.isBGMPlaying) return;
+        this.isBGMPlaying = true;
+        let step = 0;
+        const melody = [523, 587, 659, 783, 880, 783, 659, 587]; 
+        const playStep = () => {
+            if (!this.isMuted && this.ctx && !document.hidden && this.ctx.state === 'running') {
+                const freq = melody[step % melody.length];
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.03, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.connect(gain); 
+                gain.connect(this.masterGain);
+                osc.start(); 
+                osc.stop(now + 0.5);
+                step++;
+            }
+            setTimeout(playStep, 400);
+        };
+        playStep();
+    }
+};
+
+const canvas = document.getElementById('draw-canvas');
+const container = document.getElementById('canvas-container');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+let startX, startY, snapshot;
+let undoStack = [], redoStack = [];
+let currentSettings = { color: '#05ffa1', bgColor: '#000000', tool: 'pen', lineWidth: 5 };
+
+function resizeCanvas() {
+    const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.55);
+    const tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.width = size;
+    canvas.height = size;
+    ctx.putImageData(tempImage, 0, 0);
+    applyDrawingStyles();
+}
+
+function applyDrawingStyles() {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = currentSettings.lineWidth;
+    if (currentSettings.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentSettings.color;
+        ctx.shadowBlur = (currentSettings.color === '#000000') ? 0 : currentSettings.lineWidth * 2;
+        ctx.shadowColor = currentSettings.color;
+    }
+}
+
+function setNeonColor(color, el) {
+    currentSettings.color = color;
+    if (currentSettings.tool === 'eraser') setTool('pen');
+    el.closest('.control-group').querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    applyDrawingStyles();
+}
+
+function setCanvasBg(color, el) {
+    AudioEngine.playClick();
+    currentSettings.bgColor = color;
+    container.style.background = color;
+    if (color === 'transparent') container.classList.add('bg-trans');
+    else container.classList.remove('bg-trans');
+    document.querySelectorAll('#bg-controls .color-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function toggleHandedness() {
+    AudioEngine.playClick();
+    document.getElementById('controls-wrapper').classList.toggle('left-handed');
+}
+
+function setLineWidth(val) {
+    currentSettings.lineWidth = val;
+    applyDrawingStyles();
+}
+
+function setTool(tool) {
+    currentSettings.tool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById('tool-' + tool);
+    if(target) target.classList.add('active');
+    applyDrawingStyles();
+}
+
+function saveState() {
+    if (undoStack.length > 30) undoStack.shift();
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    redoStack = [];
+}
+
+function undo() {
+    if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+        AudioEngine.playClick();
+    }
+}
+
+function redo() {
+    if (redoStack.length > 0) {
+        const data = redoStack.pop();
+        undoStack.push(data);
+        ctx.putImageData(data, 0, 0);
+        AudioEngine.playClick();
+    }
+}
+
+function saveAsImage() {
+    AudioEngine.playClick();
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tCtx = tempCanvas.getContext('2d');
+    if (currentSettings.bgColor !== 'transparent') {
+        tCtx.fillStyle = currentSettings.bgColor;
+        tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    }
+    tCtx.drawImage(canvas, 0, 0);
+    const link = document.createElement('a');
+    link.download = 'neon-art.png';
+    link.href = tempCanvas.toDataURL('image/png');
+    link.click();
+}
+
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    const pos = getPos(e);
+    startX = pos.x;
+    startY = pos.y;
+    snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    applyDrawingStyles();
+    if (currentSettings.tool === 'pen' || currentSettings.tool === 'eraser') {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+    }
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getPos(e);
+    if (currentSettings.tool === 'pen' || currentSettings.tool === 'eraser') {
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    } else {
+        const originalOp = ctx.globalCompositeOperation;
+        ctx.globalCompositeOperation = 'source-over'; 
+        ctx.putImageData(snapshot, 0, 0);
+        if (currentSettings.tool === 'rect') {
+            ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        } else if (currentSettings.tool === 'circle') {
+            const r = Math.sqrt(Math.pow(pos.x - startX, 2) + Math.pow(pos.y - startY, 2));
+            ctx.beginPath();
+            ctx.arc(startX, startY, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.globalCompositeOperation = originalOp;
+    }
+}
+
+function stopDrawing() {
+    if(isDrawing) {
+        saveState();
+        isDrawing = false;
+    }
+}
+
+function clearCanvas() {
+    if(confirm("キャンバスの内容をすべて消去しますか？")) {
+        AudioEngine.playClick();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        saveState();
+    }
+}
+
+function openDraw() {
+    document.getElementById('draw-modal').style.display = 'flex';
+    resizeCanvas();
+    if(undoStack.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        saveState();
+    }
+    canvas.addEventListener('mousedown', startDrawing);
+    window.addEventListener('mousemove', draw, { passive: false });
+    window.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    window.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
+}
+
+function closeDraw() {
+    if(confirm("お絵描きを終わりますか？")) {
+        AudioEngine.playClick(() => {
+            document.getElementById('draw-modal').style.display = 'none';
+            canvas.removeEventListener('mousedown', startDrawing);
+            window.removeEventListener('mousemove', draw);
+            window.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('touchstart', startDrawing);
+            window.removeEventListener('touchmove', draw);
+            window.removeEventListener('touchend', stopDrawing);
+        });
+    }
+}
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') AudioEngine.syncMuteState();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    AudioEngine.updateButton();
+    document.getElementById('sound-toggle').addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioEngine.init().then(() => AudioEngine.toggleMute());
+    });
+
+    const clearFlashes = () => {
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.classList.remove('flash-active');
+        });
+    };
+
+    window.addEventListener('pageshow', (event) => {
+        clearFlashes();
+        if (AudioEngine.ctx) {
+            AudioEngine.syncMuteState(true);
+            if (AudioEngine.ctx.state === 'suspended' && !AudioEngine.isMuted) {
+                AudioEngine.ctx.resume();
+            }
+        }
+    });
+
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', () => AudioEngine.playHover());
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(card.classList.contains('flash-active')) return;
+            card.classList.add('flash-active');
+            AudioEngine.playClick(() => {
+                if(card.id === 'draw-menu-card') {
+                    openDraw();
+                    card.classList.remove('flash-active');
+                } else {
+                    const url = card.getAttribute('href');
+                    if (url) {
+                        setTimeout(() => { window.location.href = url; }, 150);
+                    } else {
+                        setTimeout(() => { card.classList.remove('flash-active'); }, 1000);
+                    }
+                }
+            });
+        });
+    });
+});
+
+const unlockAudio = async () => {
+    await AudioEngine.init();
+    AudioEngine.startBGM();
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+};
+window.addEventListener('click', unlockAudio);
+window.addEventListener('touchstart', unlockAudio);
+
+console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+            "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+            "color: #01cdfe; font-size: 14px;");
+</script>
+</body>
+</html>

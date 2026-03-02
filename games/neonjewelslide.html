@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON JEWEL SLIDE</title>
+    <style>
+        :root {
+            --v-pink: #ff71ce; --v-blue: #01cdfe; --v-cyan: #05ffa1; 
+            --v-yellow: #fffb96; --v-purple: #b967ff; --bg-dark: #050510;
+        }
+        * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg-dark); color: white; font-family: sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; margin: 0; overflow: hidden;
+            background: radial-gradient(circle at center, #0a0a20 0%, #050508 100%);
+            transition: background 0.8s ease;
+        }
+
+        .bg-lines {
+            position: fixed; inset: 0; z-index: -1; opacity: 0.07; 
+            background-image: linear-gradient(var(--v-blue) 1px, transparent 1px), linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 40px 40px; transform: perspective(500px) rotateX(60deg);
+            animation: move-bg 15s linear infinite;
+            transition: filter 0.8s ease, opacity 0.8s ease, transform 0.8s ease;
+        }
+        @keyframes move-bg { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
+
+        body.fever-active {
+            background: radial-gradient(circle at center, #050515 0%, #000000 100%);
+        }
+        body.fever-active .bg-lines {
+            filter: blur(8px) brightness(1.5) drop-shadow(0 0 15px var(--v-blue));
+            opacity: 0.15;
+            transform: perspective(500px) rotateX(60deg) scale(1.2);
+        }
+
+        .header-area { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; z-index: 10; }
+        h1 { font-size: 24px; color: var(--v-pink); text-shadow: 0 0 10px var(--v-pink); margin: 0; font-style: italic; letter-spacing: 2px; }
+        
+        #overlay { position: fixed; inset: 0; background: rgba(10,10,26,0.98); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .start-btn { background: linear-gradient(45deg, var(--v-pink), var(--v-purple)); color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px var(--v-pink); }
+
+        .ui-main { width: 328px; margin-bottom: 10px; z-index: 10; }
+        #status-board { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--v-blue); padding: 10px 15px; }
+        #fever-bar-container { width: 328px; height: 8px; background: rgba(255,255,255,0.1); margin-bottom: 10px; border-radius: 4px; overflow: hidden; z-index: 10; }
+        #fever-bar { width: 0%; height: 100%; background: var(--v-pink); box-shadow: 0 0 10px var(--v-pink); transition: width 0.3s; }
+        
+        #game-box { position: relative; width: 328px; height: 328px; border: 3px solid var(--v-blue); background: rgba(10, 10, 30, 0.4); transition: border-color 0.5s, box-shadow 0.5s; z-index: 10; backdrop-filter: blur(2px); }
+        #game-box.danger-pulse { animation: soft-red-pulse 1.5s infinite; border-color: #ff3333; }
+        @keyframes soft-red-pulse { 0% { box-shadow: 0 0 5px #ff0000; } 50% { box-shadow: 0 0 25px #ff0000; } 100% { box-shadow: 0 0 5px #ff0000; } }
+        #game-box.fever-mode { border-image: linear-gradient(45deg, #f06, #9f6, #06f, #f06); border-image-slice: 1; box-shadow: 0 0 20px var(--v-pink); }
+        
+        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+        .jewel { 
+            position: absolute; width: 40px; height: 40px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; z-index: 10; transition: top 0.25s, left 0.2s, transform 0.2s; 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+        }
+        .jewel.special { z-index: 15; background: rgba(255,255,255,0.2); border: 2px solid white; animation: howawan 0.5s ease-out; }
+        @keyframes howawan { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); } }
+        
+        .hint-anim { animation: boyoyon 1s infinite alternate; z-index: 25; border-color: white; }
+        @keyframes boyoyon { 0% { transform: scale(1); } 100% { transform: scale(1.15); box-shadow: 0 0 10px white; } }
+
+        .selected { background: rgba(255,255,255,0.4); z-index: 20; border: 2px solid white; transform: scale(1.1); }
+        .btn { background: rgba(255,255,255,0.08); border: 1px solid #444; padding: 10px 0; border-radius: 6px; cursor: pointer; color: #fff; font-size: 10px; flex: 1; text-align: center; }
+        .button-row { display: flex; gap: 6px; width: 328px; margin-top: 15px; z-index: 10; }
+        #ranking-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:3000; align-items:center; justify-content:center; }
+        .modal-content { background:#111; border:1px solid var(--v-pink); padding:20px; width:280px; border-radius:15px; max-height: 80vh; overflow-y: auto; }
+        #ranking-list { list-style: none; padding: 0; margin: 0; }
+        #ranking-list li { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; font-size: 14px; }
+
+        .particle { position: absolute; pointer-events: none; width: 4px; height: 4px; border-radius: 50%; z-index: 100; animation: particle-fade 0.8s ease-out forwards; }
+        @keyframes particle-fade { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="bg-lines"></div>
+
+    <div id="overlay">
+        <h1>NEON JEWEL SLIDE</h1>
+        <button class="start-btn" onclick="startGame('time')">TIME ATTACK</button>
+        <button class="start-btn" style="filter: hue-rotate(90deg);" onclick="startGame('free')">FREE PLAY</button>
+        <div id="overlay-sound-toggle" onclick="AudioEngine.toggleMute()" style="cursor:pointer; margin-top: 20px; font-size: 24px;">🔊</div>
+    </div>
+    <div class="header-area">
+        <h1>NEON JEWEL SLIDE</h1>
+        <div id="sound-toggle" onclick="AudioEngine.toggleMute()" style="cursor:pointer">🔊</div>
+    </div>
+    <div class="ui-main">
+        <div id="status-board">
+            <div id="timer-label" style="color:var(--v-blue); font-weight:bold;">60s</div>
+            <div id="score-display" style="color:var(--v-yellow); font-size:18px;">00000</div>
+        </div>
+    </div>
+    <div id="fever-bar-container"><div id="fever-bar"></div></div>
+    <div id="game-box">
+        <div id="game-container"></div>
+    </div>
+    <div class="button-row">
+        <button class="btn" style="border-color:var(--v-pink); color:var(--v-pink);" onclick="showRanking()">RANKING</button>
+        <button class="btn" style="border-color:var(--v-yellow); color:var(--v-yellow);" onclick="saveAndReset()">RESET</button>
+        <button class="btn" style="border-color:var(--v-cyan); color:var(--v-cyan);" onclick="titleAction()">TITLE</button>
+        <button class="btn" style="border-color:var(--v-blue); color:var(--v-blue);" onclick="backToMenu()">MENU</button>
+    </div>
+
+    <div id="ranking-modal">
+        <div class="modal-content">
+            <h3 style="color:var(--v-pink); margin-top:0;">HIGH SCORES</h3>
+            <ul id="ranking-list"></ul>
+            <button class="btn" style="margin-top:10px; width:100%" onclick="closeRanking()">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        const RANK_KEY = 'neonRanking';
+        const AudioEngine = {
+            ctx: null, 
+            isMuted: localStorage.getItem('v_snd_muted') === 'true',
+            init() { 
+                try {
+                    if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                } catch(e) { console.error("Audio error:", e); }
+            },
+            updateIcons() {
+                const icon = this.isMuted ? '🔇' : '🔊';
+                ['sound-toggle', 'overlay-sound-toggle'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerText = icon;
+                });
+            },
+            toggleMute() { 
+                this.init();
+                this.isMuted = !this.isMuted; 
+                localStorage.setItem('v_snd_muted', this.isMuted); 
+                this.updateIcons();
+                if(!this.isMuted) this.play(440, 'sine', 0.05, 0.05);
+            },
+            play(f, t, d, v) { 
+                if(this.isMuted) return; 
+                this.init(); 
+                if(!this.ctx) return;
+
+                const o = this.ctx.createOscillator(), g = this.ctx.createGain(); 
+                o.type = t; 
+                o.frequency.setValueAtTime(f, this.ctx.currentTime); 
+                
+                const softVol = v * 0.5;
+                g.gain.setValueAtTime(0.00001, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(softVol, this.ctx.currentTime + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + d); 
+                
+                o.connect(g); g.connect(this.ctx.destination); 
+                o.start(); o.stop(this.ctx.currentTime + d); 
+            }
+        };
+
+        function startGame(mode) { 
+            AudioEngine.init();
+            gameMode = mode; 
+            document.getElementById('overlay').style.display = 'none'; 
+            AudioEngine.play(523, 'sine', 0.1, 0.05); 
+            init(); 
+        }
+
+        AudioEngine.updateIcons();
+
+        const SIZE = 8, J_W = 40;
+        const DEFS = [{t:'💎',c:'#ff71ce'},{t:'🌟',c:'#fffb96'},{t:'🌙',c:'#01cdfe'},{t:'🍀',c:'#05ffa1'},{t:'🔥',c:'#ff9a00'},{t:'🔮',c:'#b967ff'}];
+        let board = [], score = 0, timeLeft = 60, timerInterval = null, isPlaying = false, gameMode = 'time', isProcessing = false;
+        let feverGauge = 0, isFever = false, dragStart = null, lastHintTimer = Date.now();
+
+        function init() {
+            const container = document.getElementById('game-container'); container.innerHTML = '';
+            board = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+            score = 0; feverGauge = 0; updateScore(); isPlaying = false; timeLeft = 60; isProcessing = false;
+            if(timerInterval) clearInterval(timerInterval);
+            document.getElementById('timer-label').innerText = (gameMode==='time'?'60s':'FREE');
+            document.getElementById('fever-bar').style.width = '0%';
+            document.getElementById('game-box').className = '';
+            document.body.classList.remove('fever-active');
+            for(let r=0; r<SIZE; r++) {
+                for(let c=0; c<SIZE; c++) {
+                    let avail = DEFS.filter(d => (c<2 || board[r][c-1].type!==d.t || board[r][c-2].type!==d.t) && (r<2 || board[r-1][c].type!==d.t || board[r-2][c].type!==d.t));
+                    createJewel(r, c, false, avail[Math.floor(Math.random()*avail.length)].t);
+                }
+            }
+            resetHintTimer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function createJewel(r, c, anim, type, special=null) {
+            const d = DEFS.find(x => x.t === type);
+            const el = document.createElement('div');
+            el.className = 'jewel' + (special ? ' special' : '');
+            el.innerText = special || type;
+            el.style.color = d.c;
+            el.style.textShadow = `0 0 8px ${d.c}`;
+            el.style.left = (c * J_W) + 'px';
+            el.style.top = (anim ? -J_W : r * J_W) + 'px';
+            document.getElementById('game-container').appendChild(el);
+            const j = { r, c, type, el, special };
+            board[r][c] = j;
+            if(anim) setTimeout(() => el.style.top = (r * J_W) + 'px', 10);
+            return j;
+        }
+
+        function updatePositions() {
+            board.flat().forEach(j => { if(j) { j.el.style.left = (j.c * J_W) + 'px'; j.el.style.top = (j.r * J_W) + 'px'; } });
+        }
+
+        function updateScore(n=0) { score += n; document.getElementById('score-display').innerText = String(score).padStart(5, '0'); }
+
+        function spawnParticle(x, y, color) {
+            for(let i=0; i<6; i++) {
+                const p = document.createElement('div'); p.className = 'particle';
+                p.style.left = x+'px'; p.style.top = y+'px'; p.style.background = color;
+                p.style.boxShadow = `0 0 5px ${color}`;
+                const tx = (Math.random()-0.5)*100, ty = (Math.random()-0.5)*100;
+                p.style.setProperty('--tx', tx+'px'); p.style.setProperty('--ty', ty+'px');
+                document.getElementById('game-container').appendChild(p);
+                setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        function resetHintTimer() { lastHintTimer = Date.now(); }
+        function clearHints() { document.querySelectorAll('.hint-anim').forEach(el => el.classList.remove('hint-anim')); }
+        function gameLoop() { if(Date.now() - lastHintTimer > 5000) { showHint(); resetHintTimer(); } requestAnimationFrame(gameLoop); }
+
+        function showHint() {
+            const move = findMove();
+            if(move) { move.a.el.classList.add('hint-anim'); move.b.el.classList.add('hint-anim'); }
+        }
+
+        function findMove() {
+            for(let r=0; r<SIZE; r++) {
+                for(let c=0; c<SIZE; c++) {
+                    const directions = [[0,1],[1,0]];
+                    for(let [dr, dc] of directions) {
+                        let nr=r+dr, nc=c+dc;
+                        if(nr<SIZE && nc<SIZE) {
+                            let a=board[r][c], b=board[nr][nc];
+                            if(!a || !b) continue;
+                            board[r][c]=b; board[nr][nc]=a;
+                            let match = checkMatchAt(r, c) || checkMatchAt(nr, nc);
+                            board[r][c]=a; board[nr][nc]=b;
+                            if(match) return {a, b};
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function checkMatchAt(r, c) {
+            const j = board[r][c]; if(!j) return false;
+            let h=1, v=1;
+            for(let i=c-1; i>=0 && board[r][i]?.type===j.type; i--) h++;
+            for(let i=c+1; i<SIZE && board[r][i]?.type===j.type; i++) h++;
+            for(let i=r-1; i>=0 && board[i][c]?.type===j.type; i--) v++;
+            for(let i=r+1; i<SIZE && board[i][c]?.type===j.type; i++) v++;
+            return h>=3 || v>=3;
+        }
+
+        document.getElementById('game-box').addEventListener('pointerdown', (e) => {
+            if(isProcessing) return;
+            const rect = document.getElementById('game-container').getBoundingClientRect();
+            const cx = Math.floor((e.clientX - rect.left) / J_W);
+            const cy = Math.floor((e.clientY - rect.top) / J_W);
+            if(cx>=0 && cx<SIZE && cy>=0 && cy<SIZE) {
+                clearHints(); resetHintTimer();
+                dragStart = board[cy][cx];
+                if(dragStart) {
+                    dragStart.el.classList.add('selected');
+                    AudioEngine.play(600, 'sine', 0.05, 0.005);
+                }
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if(!dragStart || isProcessing) return;
+            const rect = document.getElementById('game-container').getBoundingClientRect();
+            const cx = Math.floor((e.clientX - rect.left) / J_W);
+            const cy = Math.floor((e.clientY - rect.top) / J_W);
+            if(cx>=0 && cx<SIZE && cy>=0 && cy<SIZE && (cx!==dragStart.c || cy!==dragStart.r)) {
+                if(Math.abs(cx-dragStart.c) + Math.abs(cy-dragStart.r) === 1) {
+                    const target = board[cy][cx];
+                    dragStart.el.classList.remove('selected');
+                    swapJewels(dragStart, target);
+                    dragStart = null;
+                }
+            }
+        });
+
+        window.addEventListener('pointerup', () => { if(dragStart) dragStart.el.classList.remove('selected'); dragStart = null; });
+
+        async function swapJewels(a, b) {
+            isProcessing = true;
+            if(!isPlaying && gameMode==='time') { isPlaying = true; timerInterval = setInterval(updateTimer, 1000); }
+            const ar=a.r, ac=a.c, br=b.r, bc=b.c;
+            board[ar][ac] = b; board[br][bc] = a;
+            a.r = br; a.c = bc; b.r = ar; b.c = ac;
+            updatePositions();
+            await new Promise(r => setTimeout(r, 200));
+            if(a.special || b.special) { 
+                if(a.special) triggerSpecial(a); 
+                if(b.special) triggerSpecial(b); 
+                fillGaps(); 
+                return; 
+            }
+            if(!checkMatches(false, {r: br, c: bc})) {
+                board[ar][ac] = a; board[br][bc] = b;
+                a.r = ar; a.c = ac; b.r = br; b.c = bc;
+                updatePositions();
+                isProcessing = false;
+                AudioEngine.play(200, 'sine', 0.1, 0.01);
+            }
+        }
+
+        function checkMatches(initial=false, movePos=null) {
+            let toRemove = new Set();
+            let specials = [];
+            for(let r=0; r<SIZE; r++) {
+                for(let c=0; c<SIZE; c++) {
+                    let j = board[r][c]; if(!j || j.special) continue;
+                    let hScan=[j], vScan=[j];
+                    let tc=c+1; while(tc<SIZE && board[r][tc]?.type===j.type && !board[r][tc].special) hScan.push(board[r][tc++]);
+                    let tr=r+1; while(tr<SIZE && board[tr][c]?.type===j.type && !board[tr][c].special) vScan.push(board[tr++][c]);
+                    if(hScan.length>=3 || vScan.length>=3) {
+                        let target = movePos && (hScan.some(m => m.r === movePos.r && m.c === movePos.c) || vScan.some(m => m.r === movePos.r && m.c === movePos.c)) ? {r: movePos.r, c: movePos.c} : {r, c};
+                        if(hScan.length>=3 && vScan.length>=3) specials.push({r: target.r, c: target.c, t: j.type, s: '🌈'});
+                        else if(hScan.length>=5 || vScan.length>=5) specials.push({r: target.r, c: target.c, t: j.type, s: '💣'});
+                        else if(hScan.length===4) specials.push({r: target.r, c: target.c, t: j.type, s: '↔️'});
+                        else if(vScan.length===4) specials.push({r: target.r, c: target.c, t: j.type, s: '↕️'});
+                        if(hScan.length>=3) hScan.forEach(m=>toRemove.add(m));
+                        if(vScan.length>=3) vScan.forEach(m=>toRemove.add(m));
+                    }
+                }
+            }
+            if(toRemove.size > 0) {
+                toRemove.forEach(j => { if(board[j.r][j.c]) { spawnParticle(j.c*J_W+20, j.r*J_W+20, j.el.style.color); j.el.remove(); board[j.r][j.c]=null; updateScore(isFever ? 20 : 10); updateFever(1.5); } });
+                specials.forEach(g => { if(!board[g.r][g.c]) createJewel(g.r, g.c, false, g.t, g.s); });
+                AudioEngine.play(800, 'sine', 0.1, 0.01);
+                fillGaps();
+                return true;
+            }
+            if(!findMove()) handleNoMoves();
+            isProcessing = false;
+            return false;
+        }
+
+        async function fillGaps() {
+            for(let c=0; c<SIZE; c++) {
+                let emptySlots = 0;
+                for(let r=SIZE-1; r>=0; r--) {
+                    if(!board[r][c]) emptySlots++;
+                    else if(emptySlots>0) {
+                        let j = board[r][c];
+                        board[r+emptySlots][c] = j;
+                        board[r][c] = null;
+                        j.r = r+emptySlots;
+                    }
+                }
+                for(let i=0; i<emptySlots; i++) {
+                    let type = DEFS[Math.floor(Math.random()*DEFS.length)].t;
+                    createJewel(emptySlots-1-i, c, true, type);
+                }
+            }
+            updatePositions();
+            await new Promise(r => setTimeout(r, 300));
+            checkMatches();
+        }
+
+        function removeAt(r, c) {
+            if(r>=0 && r<SIZE && c>=0 && c<SIZE && board[r][c]) {
+                const j = board[r][c];
+                if(j.special) { triggerSpecial(j); }
+                else {
+                    spawnParticle(c*J_W+20, r*J_W+20, j.el.style.color);
+                    j.el.remove(); board[r][c]=null;
+                    updateScore(isFever ? 20 : 10); updateFever(1);
+                }
+            }
+        }
+
+        function triggerSpecial(j) {
+            const r=j.r, c=j.c, s=j.special, t=j.type; if(!board[r][c]) return;
+            spawnParticle(c*J_W+20, r*J_W+20, '#fff');
+            j.el.remove(); board[r][c]=null;
+            AudioEngine.play(400, 'square', 0.15, 0.01);
+            if(s==='↔️') { for(let i=0; i<SIZE; i++) removeAt(r, i); }
+            else if(s==='↕️') { for(let i=0; i<SIZE; i++) removeAt(i, c); }
+            else if(s==='💣') { for(let i=r-1; i<=r+1; i++) for(let k=c-1; k<=c+1; k++) removeAt(i, k); }
+            else if(s==='🌈') { board.flat().forEach(x => { if(x && x.type===t) removeAt(x.r, x.c); }); }
+        }
+
+        function updateFever(n) {
+            feverGauge=Math.min(100, feverGauge+n); document.getElementById('fever-bar').style.width=feverGauge+'%';
+            if(feverGauge>=100 && !isFever) {
+                isFever=true; 
+                document.getElementById('game-box').classList.add('fever-mode');
+                document.body.classList.add('fever-active');
+                AudioEngine.play(1000, 'sine', 0.3, 0.02);
+                let ft=setInterval(() => {
+                    feverGauge-=1.5; document.getElementById('fever-bar').style.width=feverGauge+'%';
+                    if(feverGauge<=0){ 
+                        clearInterval(ft); 
+                        isFever=false; 
+                        document.getElementById('game-box').classList.remove('fever-mode');
+                        document.body.classList.remove('fever-active');
+                    }
+                }, 100);
+            }
+        }
+
+        function updateTimer() {
+            timeLeft--; document.getElementById('timer-label').innerText = timeLeft+'s';
+            if(timeLeft<=10) { 
+                document.getElementById('game-box').classList.add('danger-pulse'); 
+                AudioEngine.play(300, 'sine', 0.05, 0.01); 
+            }
+            if(timeLeft<=0) endGame();
+        }
+
+        function handleNoMoves() {
+            AudioEngine.play(200, 'sawtooth', 0.4, 0.01);
+            updateScore(500); 
+            board.flat().forEach(j => { if(j) { spawnParticle(j.c*J_W+20, j.r*J_W+20, '#fff'); j.el.remove(); } });
+            board = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+            for(let r=0; r<SIZE; r++) {
+                for(let c=0; c<SIZE; c++) {
+                    let avail = DEFS.filter(d => (c<2 || board[r][c-1].type!==d.t || board[r][c-2].type!==d.t) && (r<2 || board[r-1][c].type!==d.t || board[r-2][c].type!==d.t));
+                    createJewel(r, c, true, avail[Math.floor(Math.random()*avail.length)].t);
+                }
+            }
+        }
+
+        function saveAndReset() {
+            AudioEngine.play(440, 'sine', 0.1, 0.01);
+            const wantsToSave = confirm("スコアを登録しますか？");
+            if (wantsToSave) {
+                const name = prompt("名前:", "PLAYER");
+                if (name === null) return;
+                let ranking = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+                ranking.push({name: name, score: score});
+                ranking.sort((a, b) => b.score - a.score);
+                ranking = ranking.slice(0, 5);
+                localStorage.setItem(RANK_KEY, JSON.stringify(ranking));
+                init(); 
+            } else {
+                if (confirm("登録せずにリセットしますか？")) init();
+            }
+        }
+
+        function showRanking() {
+            AudioEngine.play(440, 'sine', 0.1, 0.01);
+            const list = document.getElementById('ranking-list');
+            list.innerHTML = '';
+            const ranking = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
+            if (ranking.length === 0) list.innerHTML = '<li>No Data</li>';
+            else ranking.forEach((data, i) => list.innerHTML += `<li><span style="color:var(--v-yellow)">#${i+1}</span> ${data.name}: ${data.score}</li>`);
+            document.getElementById('ranking-modal').style.display = 'flex';
+        }
+
+        function closeRanking() { document.getElementById('ranking-modal').style.display = 'none'; }
+
+        function titleAction() { 
+            if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) location.reload(); 
+        }
+        
+        function backToMenu() { 
+            if(confirm("ゲームを終了してメインページに戻りますか？")) { 
+                if (window.history.length > 1) window.history.back(); 
+                else location.href = '../index.html'; 
+            }
+        }
+
+        function endGame() { 
+            isPlaying=false; clearInterval(timerInterval); 
+            AudioEngine.play(100, 'sawtooth', 0.8, 0.03);
+            alert("TIME UP! SCORE: " + score); 
+            saveAndReset(); 
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'v_snd_muted') {
+                AudioEngine.isMuted = (e.newValue === 'true');
+                AudioEngine.updateIcons();
+            }
+        });
+
+        window.addEventListener('pageshow', () => {
+            AudioEngine.isMuted = (localStorage.getItem('v_snd_muted') === 'true');
+            AudioEngine.updateIcons();
+        });
+
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+                    "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+                    "color: #01cdfe; font-size: 14px;");
+    </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ABOUT THIS SITE</title>
+    <style>
+        :root {
+            --v-pink: #ff71ce;
+            --v-blue: #01cdfe;
+            --v-purple: #b967ff;
+            --v-cyan: #05ffa1;
+            --v-yellow: #fffb96;
+            --bg-dark: #241734;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: white; 
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0;
+            padding: 60px 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #4b0082 0%, #241734 100%);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(var(--v-blue) 1px, transparent 1px),
+                linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(300px) rotateX(60deg);
+            z-index: -1;
+            opacity: 0.3;
+            animation: gridMove 5s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 0 60px; }
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(22, 22, 37, 0.75);
+            border: 2px solid var(--v-blue);
+            border-radius: 22px;
+            padding: 30px;
+            box-shadow: inset 0 0 15px rgba(1, 205, 254, 0.2), 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: clamp(24px, 6vw, 32px);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+            background: linear-gradient(to bottom, var(--v-blue) 0%, var(--v-pink) 50%, var(--v-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(3px 3px 0px var(--v-purple));
+            margin: 0 0 30px 0;
+            letter-spacing: 4px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        h1:hover {
+            animation: mini-glitch 0.3s steps(2) infinite;
+            cursor: default;
+        }
+
+        @keyframes mini-glitch {
+            0% { transform: translate(1px, 0); filter: drop-shadow(-2px 2px 0 var(--v-cyan)); }
+            50% { transform: translate(-1px, 0); filter: drop-shadow(2px -2px 0 var(--v-pink)); }
+            100% { transform: translate(0, 0); }
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 1.5em;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .gemini-text { color: var(--v-cyan); font-weight: bold; text-shadow: 0 0 3px rgba(5, 255, 161, 0.7); }
+        .pwa-text { color: var(--v-pink); font-weight: bold; text-shadow: 0 0 3px rgba(255, 113, 206, 0.7); }
+        .home-text { color: var(--v-yellow); font-weight: bold; text-shadow: 0 0 2px rgba(255, 251, 150, 0.7); }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            color: var(--v-blue);
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid var(--v-blue);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .back-link:hover {
+            color: var(--v-pink);
+            border-color: var(--v-pink);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(255, 113, 206, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ABOUT THIS SITE</h1>
+        
+        <p>
+    <ruby>閲覧<rt>えつらん</rt></ruby>していただきありがとうございます。<br>
+    <ruby>趣味<rt>しゅみ</rt></ruby>で<span class="gemini-text">Gemini</span>を<ruby>使用<rt>しよう</rt></ruby>して<ruby>制作<rt>せいさく</rt></ruby>したゲームをまとめております。<br>
+    リポジトリ<ruby>内<rt>ない</rt></ruby>にある<ruby>画像<rt>がぞう</rt></ruby>に関しては<ruby>自作<rt>じさく</rt></ruby>です。
+</p>
+
+
+<p>
+    <ruby>環境<rt>かんきょう</rt></ruby>による<ruby>動作不良<rt>どうさふりょう</rt></ruby>や、<ruby>未修正<rt>みしゅうせい</rt></ruby>の<ruby>不具合<rt>ふぐあい</rt></ruby>が<ruby>存在<rt>そんざい</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>がございます。あらかじめご<ruby>了承<rt>りょうしょう</rt></ruby>ください。
+</p>
+
+<p>
+    オフラインでも<ruby>使用<rt>しよう</rt></ruby>できるように、<span class="pwa-text">PWA</span>を<ruby>利用<rt>りよう</rt></ruby>しております。
+    <span class="home-text"><br>「<ruby>ホーム<ruby>画面<rt>がめん</rt></ruby>に<ruby>追加<rt>ついか</rt></ruby>」</span>から<ruby>追加<rt>ついか</rt></ruby>していただき、<ruby>一度<rt>いちど</rt></ruby>オンライン<ruby>上<rt>じょう</rt></ruby>で<ruby>追加<rt>ついか</rt></ruby>したアプリを<ruby>起動<rt>きどう</rt></ruby>していただければオフライン<ruby>環境<rt>かんきょう</rt></ruby>でも<ruby>利用<rt>りよう</rt></ruby>できるかと<ruby>思<rt>おも</rt></ruby>います。
+</p>
+
+<p>
+    <ruby>更新<rt>こうしん</rt></ruby>があった<ruby>場合<rt>ばあい</rt></ruby>は<ruby>一度削除<rt>いちどさくじょ</rt></ruby>して<ruby>再度追加<rt>さいどついか</rt></ruby>していただくか、キャッシュの<ruby>消去<rt>しょきょ</rt></ruby>で<ruby>更新<rt>こうしん</rt></ruby>されると<ruby>思<rt>おも</rt></ruby>います。
+</p>
+
+<p>
+    <ruby>随時更新<rt>ずいじこうしん</rt></ruby>していく<ruby>予定<rt>よてい</rt></ruby>です。よろしくお<ruby>願<rt>ねが</rt></ruby>いいたします。
+</p>
+
+        <div class="back-link" onclick="backToMenu()">≪ BACK TO MENU</div>
+    </div>
+    <script>
+        const AudioEngine = {
+    ctx: null,
+    syncMuteState() {
+        this.updateButton();
+    },
+    updateButton() {
+        const btn = document.getElementById('sound-toggle');
+        if (!btn) return;
+        const muted = localStorage.getItem('v_snd_muted') === 'true';
+        btn.textContent = muted ? '🔇' : '🔊';
+    }
+};
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'v_snd_muted') {
+        AudioEngine.syncMuteState();
+    }
+});
+
+window.addEventListener('pageshow', (event) => {
+    AudioEngine.syncMuteState();
+});
+
+function backToMenu() { 
+    setTimeout(() => {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            location.href = 'index.html'; 
+        }
+    }, 50);
+}
+
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+                    "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+                    "color: #01cdfe; font-size: 14px;");
+    </script>
+</body>
+</html>

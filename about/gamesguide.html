@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>GAMES GUIDE</title>
+    <style>
+        :root {
+            --v-pink: #ff71ce;
+            --v-blue: #01cdfe;
+            --v-purple: #b967ff;
+            --v-cyan: #05ffa1;
+            --v-yellow: #fffb96;
+            --bg-dark: #241734;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: white; 
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0;
+            padding: 40px 20px 100px 20px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #4b0082 0%, #241734 100%);
+            scroll-behavior: smooth;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(var(--v-blue) 1px, transparent 1px),
+                linear-gradient(90deg, var(--v-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(300px) rotateX(60deg);
+            z-index: -1;
+            opacity: 0.3;
+            animation: gridMove 5s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 0 60px; }
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: clamp(24px, 6vw, 32px);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+            background: linear-gradient(to bottom, var(--v-blue) 0%, var(--v-pink) 50%, var(--v-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(3px 3px 0px var(--v-purple));
+            margin: 0 0 20px 0;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .game-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 40px;
+            background: rgba(22, 22, 37, 0.6);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid var(--v-blue);
+        }
+
+        .nav-item {
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--v-cyan);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .game-desc-card {
+            background: rgba(22, 22, 37, 0.85);
+            border: 1px solid var(--v-blue);
+            border-radius: 22px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(1, 205, 254, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: 900;
+            color: var(--v-pink);
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .play-now-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--v-cyan);
+            background-color: rgba(5, 255, 161, 0.1);
+            text-decoration: none;
+            margin-top: 10px;
+            font-weight: 900;
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--v-cyan);
+            transition: all 0.3s;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .play-now-link:hover {
+            transform: translateY(-2px);
+            background-color: var(--v-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(5, 255, 161, 0.3);
+        }
+
+        .fixed-action-btns {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .fixed-action-btns.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .fixed-btn {
+            width: 45px;
+            height: 45px;
+            border: 1px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        #fixed-top-btn { background: rgba(255, 113, 206, 0.8); }
+        #fixed-bottom-btn { background: rgba(1, 205, 254, 0.8); }
+
+        .fixed-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+        p { font-size: 14px; line-height: 1.7; color: rgba(255, 255, 255, 0.8); margin: 10px 0; }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--v-blue);
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 16px;
+            border: 1px solid var(--v-blue);
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .back-link:hover { color: var(--v-pink); border-color: var(--v-pink); background: rgba(255, 113, 206, 0.05); }
+
+        @media (max-width: 480px) {
+            .nav-item { width: 45px; height: 45px; font-size: 20px; }
+        }
+
+        #pixel-wipe {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+            z-index: 200; pointer-events: none; opacity: 0;
+        }
+        #pixel-wipe.active { opacity: 1; }
+        .pixel-block { background-color: #1a0b2e;
+    opacity: 0;}
+        #pixel-wipe.active .pixel-block { animation: pixelFade 0.5s forwards; }
+        @keyframes pixelFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="top">GAMES GUIDE</h1>
+
+        <div class="game-nav">
+            <a href="#mine" class="nav-item">💣</a>
+            <a href="#peg" class="nav-item">🟢</a>
+            <a href="#snake" class="nav-item">🐍</a>
+            <a href="#fruit" class="nav-item">🍎</a>
+            <a href="#block" class="nav-item">🧩</a>
+            <a href="#jewel" class="nav-item">💎</a>
+        </div>
+
+        <div id="mine" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">💣</div>
+                <div class="card-title">MINE SEARCHER</div>
+            </div>
+            <p>
+    <ruby>地雷<rt>じらい</rt></ruby>を<ruby>回避<rt>かいひ</rt></ruby>して<ruby>安全<rt>あんぜん</rt></ruby>なマスを<ruby>見<rt>み</rt></ruby>つけるゲームです。<br>
+<br>
+    <ruby>数字<rt>すうじ</rt></ruby>は<ruby>周囲<rt>しゅうい</rt></ruby>の<ruby>地雷<rt>じらい</rt></ruby>の<ruby>数<rt>かず</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>しています。<br>
+<br>
+    その<ruby>数字<rt>すうじ</rt></ruby>を<ruby>見比<rt>みくら</rt></ruby>べ、<ruby>怪<rt>あや</rt></ruby>しい<ruby>部分<rt>ぶぶん</rt></ruby>に<ruby>旗<rt>はた</rt></ruby>を<ruby>立<rt>た</rt></ruby>て、<ruby>地雷<rt>じらい</rt></ruby>を<ruby>処理<rt>しょり</rt></ruby>し<ruby>終<rt>お</rt></ruby>えれば<ruby>成功<rt>せいこう</rt></ruby>です。<br>
+<br>
+    <ruby>運<rt>うん</rt></ruby>まかせな<ruby>部分<rt>ぶぶん</rt></ruby>も。
+</p>
+            <a class="play-now-link" data-href="../games/minesearcher.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <div id="peg" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">🟢</div>
+                <div class="card-title">PEG JUMP</div>
+            </div>
+            <p>
+    ペグ（<ruby>釘<rt>くぎ</rt></ruby>）と<ruby>呼<rt>よ</rt></ruby>ばれる<ruby>駒<rt>こま</rt></ruby>を<ruby>飛<rt>と</rt></ruby>び<ruby>越<rt>こ</rt></ruby>えて<ruby>消<rt>け</rt></ruby>していくゲームです。<br>
+<br>
+    <ruby>最初<rt>さいしょ</rt></ruby>に<ruby>任意<rt>にんい</rt></ruby>の<ruby>場所<rt>ばしょ</rt></ruby>に<ruby>穴<rt>あな</rt></ruby>を<ruby>開<rt>あ</rt></ruby>け、ペグを<ruby>一<rt>ひと</rt></ruby>つずつ<ruby>飛<rt>と</rt></ruby>び<ruby>越<rt>こ</rt></ruby>します。<br>
+<br>
+    <ruby>飛<rt>と</rt></ruby>び<ruby>越<rt>こ</rt></ruby>されたペグは<ruby>盤面<rt>ばんめん</rt></ruby>から<ruby>取<rt>と</rt></ruby>り<ruby>除<rt>のぞ</rt></ruby>かれます。<br>
+<br>
+    ペグを<ruby>最後<rt>さいご</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つにできれば<ruby>成功<rt>せいこう</rt></ruby>です。
+</p>
+            <a class="play-now-link" data-href="../games/pegjump.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <div id="snake" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">🐍🪜</div>
+                <div class="card-title">SNAKES & LADDERS</div>
+            </div>
+            <p>
+    サイコロの<ruby>出<rt>で</rt></ruby>た<ruby>目<rt>め</rt></ruby>で<ruby>進<rt>すす</rt></ruby>むゲームです。<br>
+<br>
+<ruby>完全運<rt>かんぜんうん</rt></ruby>まかせ。<br>
+<br>
+    <ruby>蛇<rt>へび</rt></ruby>の<ruby>頭<rt>あたま</rt></ruby>に<ruby>触<rt>ふ</rt></ruby>れると<ruby>食<rt>た</rt></ruby>べられ、<ruby>蛇<rt>へび</rt></ruby>の<ruby>長<rt>なが</rt></ruby>さの<ruby>分戻<rt>ぶんもど</rt></ruby>り、<ruby>梯子<rt>はしご</rt></ruby>を<ruby>登<rt>のぼ</rt></ruby>ると<ruby>梯子<rt>はしご</rt></ruby>の<ruby>長<rt>なが</rt></ruby>さの<ruby>分進<rt>ぶんすす</rt></ruby>む。<br>
+<br>
+    ランダム<ruby>性<rt>せい</rt></ruby>の<ruby>高<rt>たか</rt></ruby>いシンプルなゲームがお<ruby>好<rt>す</rt></ruby>きな<ruby>方<rt>かた</rt></ruby>や、その<ruby>日<rt>ひ</rt></ruby>の<ruby>運試<rt>うんだめ</rt></ruby>しに。
+</p>
+            <a class="play-now-link" data-href="../games/snakesandladders.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <div id="fruit" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">🍎</div>
+                <div class="card-title">FRUIT BOUNCE</div>
+            </div>
+            <p>
+    <ruby>落<rt>お</rt></ruby>ちてくる<ruby>果物<rt>くだもの</rt></ruby>を<ruby>合<rt>あ</rt></ruby>わせていくゲームです。<br>
+<br>
+    <ruby>同<rt>おな</rt></ruby>じ<ruby>果物同士<rt>くだものどうし</rt></ruby>をくっつけると<ruby>大<rt>おお</rt></ruby>きな<ruby>果物<rt>くだもの</rt></ruby>になります。<br>
+<br>
+アボカドも<ruby>果物<rt>くだもの</rt></ruby>らしい。<br>
+<br>
+    イチゴやメロンは<ruby>実<rt>じつ</rt></ruby>は……というのは言わないお<ruby>約束<rt>やくそく</rt></ruby>。
+</p>
+            <a class="play-now-link" data-href="../games/fruitbounceharvest.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <div id="block" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">🧩</div>
+                <div class="card-title">NEON BLOCK PUZZLE</div>
+            </div>
+            <p>
+    ブロック<ruby>型<rt>がた</rt></ruby>のパズルを<ruby>合<rt>あ</rt></ruby>わせて<ruby>縦横<rt>たてよこ</rt></ruby>に<ruby>消<rt>け</rt></ruby>すパズルゲームです。<br>
+</p>
+            <a class="play-now-link" data-href="../games/neonblockpuzzle.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <div id="jewel" class="game-desc-card">
+            <div class="card-header">
+                <div class="card-icon">💎</div>
+                <div class="card-title">NEON JEWEL SLIDE</div>
+            </div>
+            <p>
+    なぞって<ruby>消<rt>け</rt></ruby>すパズルゲームです。<br>
+<br>
+フィーバータイム<ruby>搭載<rt>とうさい</rt></ruby>。<br>
+<br>
+    <ruby>消<rt>き</rt></ruby>えている<ruby>間<rt>あいだ</rt></ruby>も<ruby>自由<rt>じゆう</rt></ruby>に<ruby>動<rt>うご</rt></ruby>かせるようにしたかったのですが、<ruby>不具合<rt>ふぐあい</rt></ruby>が<ruby>発生<rt>はっせい</rt></ruby>するため<ruby>断念<rt>だんねん</rt></ruby>。<br>
+<br>
+    <ruby>十字形<rt>じゅうじがた</rt></ruby>やＴ<ruby>字型<rt>じがた</rt></ruby>、Ｌ<ruby>字型<rt>じがた</rt></ruby>などを<ruby>搭載<rt>とうさい</rt></ruby>できておりません。
+</p>
+            <a class="play-now-link" data-href="../games/neonjewelslide.html">🎮 PLAY THIS GAME</a>
+        </div>
+
+        <a href="../index.html" class="back-link" id="bottom">≪ BACK TO MENU</a>
+    </div>
+
+    <div class="fixed-action-btns" id="fixed-btns">
+        <button class="fixed-btn" id="fixed-bottom-btn" onclick="document.getElementById('bottom').scrollIntoView({behavior: 'smooth'})">↓</button>
+        <button class="fixed-btn" id="fixed-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+    </div>
+
+    <div id="pixel-wipe"></div>
+
+    <script>
+
+        const fixedBtns = document.getElementById('fixed-btns');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) fixedBtns.classList.add('visible');
+            else fixedBtns.classList.remove('visible');
+        });
+
+        const wipe = document.getElementById('pixel-wipe');
+        for (let i = 0; i < 100; i++) {
+            const block = document.createElement('div');
+            block.className = 'pixel-block';
+            block.style.animationDelay = `${Math.random() * 0.3}s`;
+            wipe.appendChild(block);
+        }
+
+        document.querySelectorAll('.play-now-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetUrl = this.getAttribute('data-href');
+                if (!targetUrl) return;
+
+                wipe.classList.add('active');
+                
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                    
+                    setTimeout(() => {
+                        wipe.classList.remove('active');
+                    }, 500);
+                }, 500);
+            });
+        });
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                wipe.classList.remove('active');
+            }
+        });
+
+        console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
+                    "color: #ff71ce; font-size: 20px; font-weight: bold;", 
+                    "color: #01cdfe; font-size: 14px;");
+    </script>
+</body>
+</html>
