@@ -2,8 +2,18 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <title>MY GAME CENTER</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#ff71ce">
+    <link rel="icon" type="image/png" href="OURGAMES.png">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="OURGAMES.png">
+
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:title" content="MY GAME CENTER">
     <meta property="og:description" content="ミニゲーム倉庫">
@@ -11,59 +21,46 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tendokou.github.io/MY-GAME-CENTER/">
 
-    <title>MY GAME CENTER</title>
-    
-    <link rel="manifest" href="./manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="apple-touch-icon" href="OURGAMES.png">
-    <link rel="icon" type="image/png" href="OURGAMES.png">
-    
-    <link rel="vcs-git" href="https://github.com/TendoKou/MY-GAME-CENTER">
-
     <script>
       if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      console.log('オフライン機能準備完了！');
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(reg => {
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdateBanner(newWorker);
+                }
+              });
+            });
+          }).catch(err => console.log('SW registration failed', err));
+        });
 
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showUpdateBanner(newWorker);
-          }
-        });
-      });
-    }).catch(err => console.log('オフライン準備失敗', err));
-  });
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+          }
+        });
+      }
 
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!refreshing) {
-      window.location.reload();
-      refreshing = true;
-    }
-  });
-}
+      function showUpdateBanner(worker) {
+        const header = document.querySelector('.header-container');
+        if (!header) return;
 
-function showUpdateBanner(worker) {
-  const header = document.querySelector('.header-container');
-  if (!header) return;
+        const banner = document.createElement('div');
+        banner.id = 'update-notification';
+        banner.style.cssText = "position: absolute; top: -10px; right: 35px; background: #ff71ce; color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; border: 1px solid white; cursor: pointer; white-space: nowrap; box-shadow: 0 0 10px #ff71ce; z-index: 101;";
+        banner.innerText = "更新があります";
+        
+        header.appendChild(banner);
 
-  const banner = document.createElement('div');
-  banner.id = 'update-notification';
-  banner.style.cssText = "position: absolute; top: -10px; right: 35px; background: var(--v-pink); color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; border: 1px solid white; cursor: pointer; white-space: nowrap; box-shadow: 0 0 10px var(--v-pink); z-index: 101; animation: mini-glitch 0.3s infinite;";
-  banner.innerText = "更新があります";
-  
-  header.appendChild(banner);
-
-  banner.addEventListener('click', () => {
-    worker.postMessage({ type: 'SKIP_WAITING' });
-    banner.remove();
-  });
-
+        banner.addEventListener('click', () => {
+          worker.postMessage({ type: 'SKIP_WAITING' });
+          banner.remove();
+        });
+      }
     </script>
 
    <meta charset="UTF-8">
