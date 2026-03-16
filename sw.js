@@ -4,7 +4,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-const CACHE_NAME = 'my-game-center-v1';
+const CACHE_NAME = 'my-game-center-v1.1';
 const urlsToCache = [
   './',
   './index.html',
