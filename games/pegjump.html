@@ -244,7 +244,7 @@ function render() {
             FW.active = true; FW.update();
             setTimeout(() => {
                 Snd.play(880, 'sine', 0.5);
-                alert("クリア　残りペグ数: 1");
+                alert("クリア！残りペグ数: 1");
                 saveAndReset();
             }, 300);
         } else if (isGameOver()) {
