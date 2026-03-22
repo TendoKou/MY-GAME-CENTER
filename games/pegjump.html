@@ -3,23 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <meta name="twitter:card" content="summary_large_image">
-<meta property="og:title" content="PEG JUMP">
-<meta property="og:description" content="PEG JUMP">
-<meta property="og:image" content="https://tendokou.github.io/MY-GAME-CENTER/MY-GAME-CENTER.png">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://tendokou.github.io/MY-GAME-CENTER/games/pegjump.html">
-
-<link rel="manifest" href="../manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<link rel="apple-touch-icon" href="../OURGAMES.png">
-<link rel="icon" type="image/png" href="../OURGAMES.png">
-
-<link rel="vcs-git" href="https://tendokou.github.io/MY-GAME-CENTER/games/pegjump.html">
-    
     <title>PEG JUMP</title>
     <style>
         :root {
@@ -47,6 +30,9 @@
             from { transform: perspective(500px) rotateX(60deg) translateY(0); }
             to { transform: perspective(500px) rotateX(60deg) translateY(50px); }
         }
+
+        /* 花火用キャンバス */
+        #fw-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
 
         .game-container {
             display: flex; flex-direction: column; align-items: center;
@@ -126,6 +112,7 @@
     </style>
 </head>
 <body>
+    <canvas id="fw-canvas"></canvas>
     <div class="bg-lines"></div>
     <div class="game-container">
         <div class="header">
@@ -152,17 +139,15 @@
 <script>
 const layout = [[-1,-1,1,1,1,-1,-1],[-1,-1,1,1,1,-1,-1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[-1,-1,1,1,1,-1,-1],[-1,-1,1,1,1,-1,-1]];
 const RANK_KEY = 'jumping_pegs_rank';
-let state = [], selected = null, score = 0, firstHoleMade = false;
+let state = [], selected = null, score = 0, firstHoleMade = false, isFinished = false;
 
 const Snd = {
     ctx: null,
     muted: localStorage.getItem('v_snd_muted') === 'true',
-    step: 0,
     init() {
         if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         if (this.ctx.state === 'suspended') this.ctx.resume();
     },
-
     toggle() {
         this.muted = !this.muted;
         localStorage.setItem('v_snd_muted', this.muted);
@@ -189,15 +174,41 @@ const Snd = {
     }
 };
 
-function backToTitle() {
-    if(confirm("タイトルに戻りますか？現在の状況はリセットされます。")) {
-        location.reload();
+const FW = {
+    canvas: document.getElementById('fw-canvas'),
+    ctx: null, particles: [], active: false,
+    colors: ['#ff71ce', '#01cdfe', '#b967ff', '#05ffa1', '#fffb96'],
+    init() {
+        this.ctx = this.canvas.getContext('2d');
+        window.addEventListener('resize', () => this.resize());
+        this.resize();
+    },
+    resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+    burst(x, y) {
+        for (let i = 0; i < 30; i++) {
+            this.particles.push({
+                x, y, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+                a: 1, c: this.colors[Math.floor(Math.random() * this.colors.length)]
+            });
+        }
+    },
+    update() {
+        if (!this.active && this.particles.length === 0) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.active && Math.random() < 0.15) this.burst(Math.random() * this.canvas.width, Math.random() * this.canvas.height * 0.5);
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.a -= 0.02;
+            if (p.a <= 0) { this.particles.splice(i, 1); continue; }
+            this.ctx.globalAlpha = p.a; this.ctx.fillStyle = p.c;
+            this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 2, 0, 7); this.ctx.fill();
+        }
+        requestAnimationFrame(() => this.update());
     }
-}
+};
 
 function init() {
     state = layout.map(r => [...r]);
-    selected = null; firstHoleMade = false; score = 33;
+    selected = null; firstHoleMade = false; score = 33; isFinished = false; FW.active = false;
     document.getElementById('guide').innerText = "最初に、穴をあける場所を選んでください";
     Snd.sync();
     render();
@@ -227,16 +238,28 @@ function render() {
         }
     }
     score = count;
-    if (firstHoleMade && isGameOver()) {
-        setTimeout(() => { 
-            Snd.play(100, 'sawtooth', 0.5, 0.05);
-            alert("手詰まりです！残りペグ数: " + score); 
-            saveAndReset(); 
-        }, 300);
+    if (firstHoleMade && !isFinished) {
+        if (score === 1) {
+            isFinished = true;
+            FW.active = true; FW.update();
+            setTimeout(() => {
+                Snd.play(880, 'sine', 0.5);
+                alert("クリア　残りペグ数: 1");
+                saveAndReset();
+            }, 300);
+        } else if (isGameOver()) {
+            isFinished = true;
+            setTimeout(() => { 
+                Snd.play(100, 'sawtooth', 0.5, 0.05);
+                alert("手詰まりです！残りペグ数: " + score); 
+                saveAndReset(); 
+            }, 300);
+        }
     }
 }
 
 function handleClick(r, c) {
+    if (isFinished) return;
     Snd.init();
     if (!firstHoleMade) {
         state[r][c] = 0; firstHoleMade = true;
@@ -309,14 +332,10 @@ function backToMenu() {
     }
 }
 
-window.addEventListener('storage', (e) => {
-    if (e.key === 'v_snd_muted') Snd.sync();
-});
+window.addEventListener('storage', (e) => { if (e.key === 'v_snd_muted') Snd.sync(); });
+window.addEventListener('pageshow', () => Snd.sync());
 
-window.addEventListener('pageshow', () => {
-    Snd.sync();
-});
-
+FW.init();
 init();
 
 console.log("%cTHANK YOU FOR PLAYING\n%cTHANK YOU Gemini BY Tendo Kou", 
