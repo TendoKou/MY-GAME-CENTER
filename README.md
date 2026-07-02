@@ -12,8 +12,8 @@
 
 時随更新していく予定です。<br>よろしくお願いいたします。
 
-MINE SEARCHERのRoblox版もあります。
-よければ。
+MINE SEARCHERのRoblox版もあります。<br>
+よければやってみてください。<br>
 https://www.roblox.com/share?code=d8b3136ae56cb14bbce8f6ce2f5cb09a&type=ExperienceDetails&stamp=1783015518882
 
 Tendo Kou
